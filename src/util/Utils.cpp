@@ -44,10 +44,18 @@ std::vector<std::vector<float>> Utils::readVList(const std::string &file_path) {
     if (file.is_open()) {
 
         getline(file, line);
+        boost::trim_right(line);
+        boost::trim_left(line);
+
         std::vector<std::string> line_vec;
         boost::split(line_vec, line, boost::is_any_of(" "));
-        std::vector<float> xy(2);
 
+        if (line_vec.size() != 1 && line_vec.size() != 3) {
+            std::cerr << "Error in line " << line << std::endl;
+            throw;
+        }
+
+        std::vector<float> xy(2);
         if (line_vec.size() == 1) {
             int n = stoi(line);
             vertices.reserve(n);
@@ -58,7 +66,15 @@ std::vector<std::vector<float>> Utils::readVList(const std::string &file_path) {
         }
 
         while (getline(file, line)) {
+            boost::trim_right(line);
+            boost::trim_left(line);
             boost::split(line_vec, line, boost::is_any_of(" "));
+
+            if (line_vec.size() != 3) {
+                std::cerr << "Error in line " << line << std::endl;
+                throw;
+            }
+
             std::transform(line_vec.begin() + 1, line_vec.end(), xy.begin(),
                            [](std::string const &val) { return stof(val); });
             vertices.push_back(xy);
@@ -85,9 +101,17 @@ std::vector<std::vector<float>> Utils::loadGMetricSpace(int n, const std::string
 
         std::vector<std::string> line_vec;
         while (getline(file, line)) {
+            boost::trim_right(line);
+            boost::trim_left(line);
             boost::split(line_vec, line, boost::is_any_of(" "));
-            int v1 = stoi(line_vec[0]);
-            int v2 = stoi(line_vec[1]);
+
+            if (line_vec.size() != 3) {
+                std::cerr << "Error in line " << line << std::endl;
+                throw;
+            }
+
+            int v1 = stoi(line_vec[0])-1;
+            int v2 = stoi(line_vec[1])-1;
             float w = stof(line_vec[2]);
 
             G[v1][v2] = w;
@@ -97,7 +121,6 @@ std::vector<std::vector<float>> Utils::loadGMetricSpace(int n, const std::string
     } else {
         std::cerr << "Unable to open file" << std::endl;
     }
-
     floydWarshall(G);
     return G;
 }
@@ -122,5 +145,6 @@ float Utils::stdDev(std::vector<float> &items, float average) {
     for (float item : items) {
         std += pow(item - average, 2);
     }
-    return sqrt(std / (items.size() - 1));
+    int n = items.size() > 1 ? items.size() - 1 : items.size();
+    return sqrt(std / n);
 }

@@ -37,7 +37,7 @@ sudo apt install cmake
 
 ```
 $ cmake -DCMAKE_BUILD_TYPE=Release .
-
+$ cmake --build .
 ```
 The binary file will be generated onto the "bin/" folder. Get onto it with ```cd bin/```
 
