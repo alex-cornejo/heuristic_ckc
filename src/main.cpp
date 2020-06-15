@@ -27,14 +27,17 @@ void validateSolution(KCSolution &kcSolution, int n) {
     for (int i = 0; i < n; i++) {
         if (repetitions[i] != 1) {
             valid = false;
-            std::cout << "vertex " << i << " is assigned " << repetitions[i] << "times." << std::endl;
+            std::cout << "vertex " << i << " is assigned " << repetitions[i] << " times." << std::endl;
         }
     }
-    std::cout << "Solution is: " << (valid ? "valid" : "invalid") << std::endl;
+    if (!valid) {
+        std::cout << "Solution is INVALID " << std::endl;
+    }
+
 }
 
-void execute(std::string& instancePath, int n, int k, int L, float out, bool multicenter,
-             int maxIter, int numRepetitions, bool printable, std::string& instanceFormat){
+void execute(std::string &instancePath, int n, int k, int L, float out, bool multicenter,
+             int maxIter, int numRepetitions, bool printable, std::string &instanceFormat) {
 
     std::vector<std::vector<float>> G;
     if (instanceFormat == "tsplib") {
@@ -77,10 +80,10 @@ void execute(std::string& instancePath, int n, int k, int L, float out, bool mul
 
     auto average = solutionSizeSum / maxIter;
 
-    std::cout << "Average size: " << average << std::endl;
-    std::cout << "Total time: " << totalTime << std::endl;
-    std::cout << "Time per running: " << (totalTime / maxIter) << std::endl;
+    std::cout << "\nAverage size: " << average << std::endl;
     std::cout << "Standard deviation: " << Utils::stdDev(solutionSizeArr, average) << std::endl;
+    std::cout << "\nTotal time: " << totalTime << std::endl;
+    std::cout << "Time per running: " << (totalTime / maxIter) << std::endl;
 
     KCSolution kcSolution = toKCModel(bestAssignment);
     validateSolution(kcSolution, n);
@@ -97,10 +100,10 @@ int main(int argc, char **argv) {
     int k = atoi(argv[3]);
     int L = atoi(argv[4]);
     float out = atof(argv[5]);
-    bool multicenter = strcmp(argv[6],"true")==0;
+    bool multicenter = strcmp(argv[6], "true") == 0;
     int maxIter = atoi(argv[7]);
     int numRepetitions = atoi(argv[8]);
-    bool printable = strcmp(argv[9],"true")==0;
+    bool printable = strcmp(argv[9], "true") == 0;
     std::string instanceFormat = argv[10];
 
     execute(instancePath, n, k, L, out, multicenter, maxIter, numRepetitions, printable, instanceFormat);

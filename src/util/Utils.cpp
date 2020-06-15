@@ -145,6 +145,6 @@ float Utils::stdDev(std::vector<float> &items, float average) {
     for (float item : items) {
         std += pow(item - average, 2);
     }
-    int n = items.size() > 1 ? items.size() - 1 : items.size();
+    int n = items.size() > 2 ? items.size() - 1 : items.size();
     return sqrt(std / n);
 }

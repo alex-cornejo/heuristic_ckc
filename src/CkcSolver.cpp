@@ -5,7 +5,7 @@
 #include "CkcSolver.h"
 #include <algorithm>
 #include <cmath>
-#include <iostream>
+#include <stdlib.h>
 
 CkcSolver::CkcSolver(int k, int L, const std::vector<std::vector<float>> &G, int numRepetitions) :
         k(k), L(L), G(G), numRepetitions(numRepetitions) {
@@ -38,13 +38,30 @@ void CkcSolver::init() {
 }
 
 void CkcSolver::loadEdges() {
-    w.reserve((n * (n - 1)) / 2);
+//    w.reserve((n * (n - 1)) / 2);
+//    for (int i = 0; i < n; i++) {
+//        for (int j = i + 1; j < n; j++) {
+//            w.push_back(G[i][j]);
+//        }
+//    }
+//    sort(w.begin(), w.end());
+
+    w.resize(160000);
+    int p = 0;
     for (int i = 0; i < n; i++) {
         for (int j = i + 1; j < n; j++) {
-            w.push_back(G[i][j]);
+            w[p] = G[i][j];
+            p++;
         }
     }
     sort(w.begin(), w.end());
+    last_zero = 0;
+    for (int i = 0; i < w.size(); i++) {
+        if (w[i] != 0) {
+            last_zero = i - 1;
+            break;
+        }
+    }
 }
 
 void CkcSolver::computeScore(float r) {
@@ -73,10 +90,12 @@ void CkcSolver::loadRefMatrix() {
     refMatrix.resize(n);
     std::vector<std::vector<float>> vertexReferences(n, std::vector<float>(2));
     for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            vertexReferences[j] = {(float) j, G[i][j]};
+        int ir = 0;
+        for (int j = n-1; j >=0; j--, ir++) {
+            vertexReferences[ir] = {(float) j, G[i][j]};
         }
-        std::sort(vertexReferences.begin(), vertexReferences.end(), [](auto &v1, auto &v2) { return v1[1] > v2[1]; });
+        std::stable_sort(vertexReferences.begin(), vertexReferences.end(),
+                         [](auto &v1, auto &v2) { return v1[1] > v2[1]; });
         std::vector<int> references(n);
         for (int j = 0; j < n; j++) {
             references[j] = (int) vertexReferences[j][0];
@@ -265,7 +284,7 @@ std::map<int, std::vector<int>> CkcSolver::getFeasibleSolution(float r, int iter
 std::map<int, std::vector<int>> CkcSolver::solve() {
 
     int high = w.size();
-    int low = -1;
+    int low = last_zero;
 
     std::map<int, std::vector<int>> A;
     float coverRadius = +INFINITY;
@@ -288,7 +307,7 @@ std::map<int, std::vector<int>> CkcSolver::solve() {
             }
         }
 
-        if (coverRadius <= w[mid]) {
+        if (coverRadius <= r) {
             high = mid;
         } else {
             low = mid;

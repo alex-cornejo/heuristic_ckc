@@ -18,7 +18,6 @@ private:
     int L;
     std::vector<std::vector<float>> G;
     int n;
-
     std::vector<float> w;
     std::vector<int> scores;
     std::vector<bool> assigned;
@@ -29,6 +28,7 @@ private:
     int seed = 0;
     std::vector<float> distances;
     std::vector<std::vector<int>> refMatrix;
+    int last_zero;
 
 public:
     void loadEdges();
