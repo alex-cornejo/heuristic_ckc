@@ -86,10 +86,11 @@ void execute(std::string &instancePath, int n, int k, int L, float out, bool mul
     std::cout << "Time per running: " << (totalTime / maxIter) << std::endl;
 
     KCSolution kcSolution = toKCModel(bestAssignment);
+    kcSolution.setInstance(instancePath);
     validateSolution(kcSolution, n);
 
     if (printable) {
-        std::cout << kcSolution.toJson() << std::endl;
+        std::cout << std::endl << kcSolution.toJson() << std::endl;
     }
 }
 

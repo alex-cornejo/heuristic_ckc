@@ -64,19 +64,18 @@ $ ./ckc_heuristic [file] [n] [k] [L] [out_perc] [multicenter] [ind_rep] [rep] [p
 
 # Example
 ```
-$ ./ckc_heuristic 'pr124.tsp' 124 10 13 0.03 false 1 1 false tsplib
+$ ./ckc_heuristic 'pr124.tsp' 124 10 13 0 false 1 1 false tsplib
 ```
 
 ### Output information
 The execution report a output with the following relevant information:
 
 ```
-$ Solution size (0 perc. outliers) = 4162.655273
-  Solution size (3.00 perc. outliers) = 2045.880005
-  
-  Exec. time per repetition:
-  0.014728,
-  Total time: 0.014728 
+Average size: 4086.03
+Standard deviation: 0
+
+Total time: 0.002204
+Time per running: 0.002204
 ```
 # Another example
 
@@ -88,26 +87,23 @@ $ ./ckc_heuristic 'pr124.tsp' 124 10 13 0.03 false 1 1 true tsplib
 The execution reports the following relevant information:
 
 ```
-$ Solution size (0 perc. outliers) = 4162.655273 
-  Solution size (3.00 perc. outliers) = 2045.880005 
+Average size: 4086.03
+Standard deviation: 0
 
-  { "instance": "/home/ckc/Escritorio/pr124.tsp", 
-    "outliers": [83,40,115,114], 
-    "centers": [ { "center": 59, "nodes": [28,32,33,34,35,54,57,58,59,60,61,64,65]},
-                 { "center": 102, "nodes": [101,102,103,104,105,106,107,108,109,110,111,112,113]},
-                 { "center": 8, "nodes": [8,9,10,11,12,13,14,15,16,46,47,48,49]},
-                 { "center": 79, "nodes": [77,78,79,91,92,93,94,95,96,97,98,99,123]},
-                 { "center": 6, "nodes": [0,1,2,3,4,5,6,7,26,27,29,30,31]},
-                 { "center": 36, "nodes": [19,20,21,22,23,24,25,36,37,38,39,55,56]},
-                 { "center": 16, "nodes": [17,18,40,41,42,43,44,45,50,51,52,53]},
-                 { "center": 96, "nodes": [72,73,74,75,76,80,116,117,118,119,120,121,122]},
-                 { "center": 89, "nodes": [84,85,86,87,88,89,90,100]},
-                 { "center": 64, "nodes": [62,63,66,67,68,69,70,71,81,82,83,114,115]}
-  ]}
-  
-  Exec. time per repetition:
-  0.014728,
-  Total time: 0.014728
+Total time: 0.003079
+Time per running: 0.003079
+
+{"centers":[{"center":0,"nodes":[29,33,32,21,28,24,22,34,23,38,35,58,37]},
+{"center":4,"nodes":[0,7,1,2,3,6,5,26,4,31,27,25,30]},
+{"center":10,"nodes":[12,50,11,49,10,13,14,48,47,9,46,8,15]},
+{"center":18,"nodes":[36,39,54,20,19,55,18,17,40,16,41,42,43]},
+{"center":57,"nodes":[60,56,57,59,61,62,63,65,64,66,82,80,83]},
+{"center":72,"nodes":[123,122,121,99,98,97,96,95,94,93,92,91,79]},
+{"center":75,"nodes":[67,68,69,70,71,72,73,74,75,76,77,78,81]},
+{"center":76,"nodes":[114,115,116,117,118,119,120]},
+{"center":85,"nodes":[110,111,112,103,113,102,101,88,100,87,90,89,86]},
+{"center":87,"nodes":[52,84,85,104,105,106,107,108,109,44,45,51,53]}],
+"instance":"../dataset/a280.tsp","outliers":[]}
  ```
   
 
