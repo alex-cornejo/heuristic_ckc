@@ -1,5 +1,4 @@
 #include <iostream>
-#include <cmath>
 #include <chrono>
 #include "util/Utils.h"
 #include "CkcSolver.h"

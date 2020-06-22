@@ -5,7 +5,6 @@
 #include "CkcSolver.h"
 #include <algorithm>
 #include <cmath>
-#include <stdlib.h>
 #include <iostream>
 
 CkcSolver::CkcSolver(int k, int L, const std::vector<std::vector<float>> &G, int numRepetitions) :
@@ -231,7 +230,7 @@ std::map<int, std::vector<int>> CkcSolver::getFeasibleSolution(float r, int iter
             }
         }
 
-        if (!NgL.empty() > 0) {
+        if (!NgL.empty()) {
             ca = distanceBasedSelectionConstant(NgL, r);
         } else {
             float maxScore = -1;
