@@ -34,6 +34,7 @@
 #IDEs
 .idea/
 .vscode/
+.vs/
 CMakeFiles/
 cmake-build-debug/
 bin/
@@ -52,3 +53,4 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps
+CMakeSettings.json
