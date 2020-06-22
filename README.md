@@ -44,7 +44,7 @@ The binary file will be generated onto the "bin/" folder. Get onto it with ```cd
 # Run
 
 ```
-$ ./ckc_heuristic [file] [n] [k] [L] [out_perc] [multicenter] [ind_rep] [rep] [print] [instance_format]
+$ ./ckc_heuristic [file] [n] [k] [L] [ind_rep] [rep] [print] [instance_format]
 ```
 
 ## Where,
