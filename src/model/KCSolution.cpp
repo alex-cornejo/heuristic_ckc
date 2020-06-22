@@ -18,14 +18,6 @@ void KCSolution::setInstance(const std::string &instance) {
     KCSolution::instance = instance;
 }
 
-const std::vector<int> &KCSolution::getOutliers() const {
-    return outliers;
-}
-
-void KCSolution::setOutliers(const std::vector<int> &outliers) {
-    KCSolution::outliers = outliers;
-}
-
 const std::vector<Center> &KCSolution::getCenters() const {
     return centers;
 }
@@ -39,8 +31,7 @@ void KCSolution::addCenter(Center &center) {
 }
 
 std::string KCSolution::toJson() {
-    json bodyJson = {{"instance", getInstance()},
-                     {"outliers", getOutliers()}};
+    json bodyJson = {{"instance", getInstance()}};
 
     json centersJson;
     for (auto &center : getCenters()) {

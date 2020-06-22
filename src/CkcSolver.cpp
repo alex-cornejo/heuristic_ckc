@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <stdlib.h>
+#include <iostream>
 
 CkcSolver::CkcSolver(int k, int L, const std::vector<std::vector<float>> &G, int numRepetitions) :
         k(k), L(L), G(G), numRepetitions(numRepetitions) {
@@ -38,30 +39,13 @@ void CkcSolver::init() {
 }
 
 void CkcSolver::loadEdges() {
-//    w.reserve((n * (n - 1)) / 2);
-//    for (int i = 0; i < n; i++) {
-//        for (int j = i + 1; j < n; j++) {
-//            w.push_back(G[i][j]);
-//        }
-//    }
-//    sort(w.begin(), w.end());
-
-    w.resize(160000);
-    int p = 0;
+    w.reserve((n * (n - 1)) / 2);
     for (int i = 0; i < n; i++) {
         for (int j = i + 1; j < n; j++) {
-            w[p] = G[i][j];
-            p++;
+            w.push_back(G[i][j]);
         }
     }
     sort(w.begin(), w.end());
-    last_zero = 0;
-    for (int i = 0; i < w.size(); i++) {
-        if (w[i] != 0) {
-            last_zero = i - 1;
-            break;
-        }
-    }
 }
 
 void CkcSolver::computeScore(float r) {
@@ -72,7 +56,26 @@ void CkcSolver::computeScore(float r) {
 
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
-            if (G[i][j] <= r) scores[i]++;
+            if (i != j) {
+                if (G[i][j] <= r) scores[i]++;
+            }
+        }
+    }
+}
+
+void CkcSolver::updateScore(std::pair<int, std::vector<int>> &ca, float r){
+
+    for (int v : ca.second) {
+        for (int j = 0; j < n; j++) {
+            if (v != j && G[v][j] <= r) {
+                scores[j]--;
+            }
+        }
+    }
+    int v = ca.first;
+    for (int j = 0; j < n; j++) {
+        if (v != j && G[v][j] <= r) {
+            scores[j]--;
         }
     }
 }
@@ -91,7 +94,7 @@ void CkcSolver::loadRefMatrix() {
     std::vector<std::vector<float>> vertexReferences(n, std::vector<float>(2));
     for (int i = 0; i < n; i++) {
         int ir = 0;
-        for (int j = n-1; j >=0; j--, ir++) {
+        for (int j = n - 1; j >= 0; j--, ir++) {
             vertexReferences[ir] = {(float) j, G[i][j]};
         }
         std::stable_sort(vertexReferences.begin(), vertexReferences.end(),
@@ -112,7 +115,7 @@ int CkcSolver::getFVertex(std::vector<int> &C, int iter) {
         float maxDist = 0;
         for (int i = 0; i < n; i++) {
             float dist = distances[i];
-            if (maxDist < dist) {
+            if (maxDist < dist && !assigned[i]) {
                 maxDist = dist;
                 f = i;
             }
@@ -147,7 +150,7 @@ void CkcSolver::assignMissingVertices(std::vector<int> &C, std::vector<std::vect
 
 std::pair<int, std::vector<int>> CkcSolver::distanceBasedSelectionConstant(std::vector<int> &NgL, float r) {
 
-    std::pair<int, std::vector<int>> assignment;
+    std::pair<int, std::vector<int>> ca;
     float d = +INFINITY;
 
     for (int v : NgL) {
@@ -169,8 +172,10 @@ std::pair<int, std::vector<int>> CkcSolver::distanceBasedSelectionConstant(std::
         float dv = 0;
         int iu = 0;
         for (int u : refMatrix[fref]) {
-
-            if (G[v][u] <= r && !assigned[u]) {
+            // 1st: avoid v to be assigned to itself
+            // 2nd: Pruned graph
+            // 3rd: u is not assigned
+            if (u != v && G[v][u] <= r && !assigned[u]) {
                 if (iu == L) {
                     dv = G[fref][u];
                     break;
@@ -182,11 +187,11 @@ std::pair<int, std::vector<int>> CkcSolver::distanceBasedSelectionConstant(std::
 
         if (dv < d) {
             d = dv;
-            assignment.first = v;
-            assignment.second = vertices;
+            ca.first = v;
+            ca.second = vertices;
         }
     }
-    return assignment;
+    return ca;
 }
 
 float CkcSolver::getRadio(std::map<int, std::vector<int>> &A) {
@@ -204,12 +209,12 @@ float CkcSolver::getRadio(std::map<int, std::vector<int>> &A) {
 
 std::map<int, std::vector<int>> CkcSolver::getFeasibleSolution(float r, int iter) {
     computeScore(r);
-    std::map<int, std::vector<int>> A;
+    std::map<int, std::vector<int>> CA;
     std::vector<int> C;
-    std::vector<std::vector<int>> assignments;
-    for (int i = 0; i < k; i++) {
+    std::vector<std::vector<int>> A;
+    for (int i = 0; i < k && unassignedCount>0; i++) {
 
-        std::pair<int, std::vector<int>> assignment;
+        std::pair<int, std::vector<int>> ca;
 
         int f = getFVertex(C, iter);
 
@@ -217,19 +222,26 @@ std::map<int, std::vector<int>> CkcSolver::getFeasibleSolution(float r, int iter
         std::vector<int> NgL;
         NgL.reserve(n);
         for (int v = 0; v < n; ++v) {
-            if (G[f][v] <= r && scores[v] > L && !centers[v]) {
+            // 1st: v is not assigned
+            // 2nd: Pruned graph
+            // 3rd: Score > L
+            // 4th: v is not a center
+            if (!assigned[v] && G[f][v] <= r && scores[v] > L && !centers[v]) {
                 NgL.push_back(v);
             }
         }
 
         if (!NgL.empty() > 0) {
-            assignment = distanceBasedSelectionConstant(NgL, r);
+            ca = distanceBasedSelectionConstant(NgL, r);
         } else {
             float maxScore = -1;
-            int vMaxScore = 0;
+            int vMaxScore = -1;
             if (i > 0) {
                 for (int j = 0; j < n; j++) {
-                    if (!centers[j] && G[f][j] <= r) {
+                    // 1st: j is not assigned
+                    // 2nd: j is not a center
+                    // 3rd: Pruned graph
+                    if (!assigned[j] && !centers[j] && G[f][j] <= r) {
                         if (maxScore < scores[j]) {
                             maxScore = scores[j];
                             vMaxScore = j;
@@ -238,58 +250,57 @@ std::map<int, std::vector<int>> CkcSolver::getFeasibleSolution(float r, int iter
                 }
             } else {
                 vMaxScore = f;
+                maxScore = 0;
             }
 
             std::vector<int> vertices;
             vertices.reserve(maxScore);
             for (int j = 0; j < n; j++) {
-                if (!assigned[j] && G[vMaxScore][j] <= r) {
+                // 1st: j is not the center
+                // 2nd: j is not assigned
+                // 3rd: Pruned graph
+                if (j != vMaxScore && !assigned[j] && G[vMaxScore][j] <= r) {
                     vertices.push_back(j);
                 }
             }
-            assignment.first = vMaxScore;
-            assignment.second = vertices;
+            ca.first = vMaxScore;
+            ca.second = vertices;
         }
 
-        // check center and vertices
-        centers[assignment.first] = true;
-        for (int v : assignment.second) {
+        centers[ca.first] = true; // center is checked as center
+        assigned[ca.first] = true; //center is checked as assigned
+
+        // vertices covered by center are checked as assigned
+        for (int v : ca.second) {
             assigned[v] = true;
         }
-        capacities[i] -= assignment.second.size();
-        unassignedCount -= assignment.second.size();
+        capacities[i] -= ca.second.size(); // capacity of center i-th is reduced
+        unassignedCount -= ca.second.size() + 1; // +1 center is not considered
 
-        // update scores
-        for (int v : assignment.second) {
-            for (int j = 0; j < n; j++) {
-                if (G[v][j] <= r) {
-                    scores[j]--;
-                }
-            }
-        }
+        updateScore(ca, r);
 
-        C.push_back(assignment.first);
-        assignments.push_back(assignment.second);
-        updateDistances(assignment.first);
+        C.push_back(ca.first);
+        A.push_back(ca.second);
+        updateDistances(ca.first);
     }
 
     // put unassigned vertices
-    assignMissingVertices(C, assignments);
-    for (int l = 0; l < k; ++l) {
-        A.insert({C[l], assignments[l]});
+    assignMissingVertices(C, A);
+    for (int l = 0; l < C.size(); ++l) {
+        CA.insert({C[l], A[l]});
     }
-    return A;
+    return CA;
 }
 
 std::map<int, std::vector<int>> CkcSolver::solve() {
 
-    int high = w.size();
-    int low = last_zero;
+    int high = w.size()-1;
+    int low = 0;
 
     std::map<int, std::vector<int>> A;
     float coverRadius = +INFINITY;
 
-    while (high - low > 1) {
+    while (low <= high) {
 
         int mid = (high + low) / 2;
         float r = w[mid];
@@ -308,9 +319,9 @@ std::map<int, std::vector<int>> CkcSolver::solve() {
         }
 
         if (coverRadius <= r) {
-            high = mid;
+            high = mid-1;
         } else {
-            low = mid;
+            low = mid+1;
         }
     }
 
