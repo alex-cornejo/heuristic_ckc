@@ -24,11 +24,10 @@ private:
     std::vector<bool> centers;
     int numRepetitions;
     std::vector<int> capacities;
-    int unassignedCount;
+    int unassignedCount; // tracks the unassigned vertices
     int seed = 0;
     std::vector<float> distances;
     std::vector<std::vector<int>> refMatrix;
-    int last_zero;
 
 public:
     void loadEdges();
@@ -52,6 +51,8 @@ public:
     std::map<int, std::vector<int>> getFeasibleSolution(float r, int iter);
 
     std::map<int, std::vector<int>> solve();
+
+    void updateScore(std::pair<int, std::vector<int>> &ca, float r);
 };
 
 

@@ -1,5 +1,4 @@
 #include <iostream>
-#include <cmath>
 #include <chrono>
 #include "util/Utils.h"
 #include "CkcSolver.h"
@@ -20,6 +19,7 @@ void validateSolution(KCSolution &kcSolution, int n) {
     bool valid = true;
     std::vector<int> repetitions(n);
     for (auto &c : kcSolution.getCenters()) {
+        repetitions[c.getCenter()]++;
         for (int i : c.getNodes()) {
             repetitions[i]++;
         }
@@ -33,10 +33,9 @@ void validateSolution(KCSolution &kcSolution, int n) {
     if (!valid) {
         std::cout << "Solution is INVALID " << std::endl;
     }
-
 }
 
-void execute(std::string &instancePath, int n, int k, int L, float out, bool multicenter,
+void execute(std::string &instancePath, int n, int k, int L,
              int maxIter, int numRepetitions, bool printable, std::string &instanceFormat) {
 
     std::vector<std::vector<float>> G;
@@ -95,19 +94,16 @@ void execute(std::string &instancePath, int n, int k, int L, float out, bool mul
 }
 
 int main(int argc, char **argv) {
-
     std::string instancePath = argv[1];
     int n = atoi(argv[2]);
     int k = atoi(argv[3]);
     int L = atoi(argv[4]);
-    float out = atof(argv[5]);
-    bool multicenter = strcmp(argv[6], "true") == 0;
-    int maxIter = atoi(argv[7]);
-    int numRepetitions = atoi(argv[8]);
-    bool printable = strcmp(argv[9], "true") == 0;
-    std::string instanceFormat = argv[10];
+    int maxIter = atoi(argv[5]);
+    int numRepetitions = atoi(argv[6]);
+    bool printable = strcmp(argv[7], "true") == 0;
+    std::string instanceFormat = argv[8];
 
-    execute(instancePath, n, k, L, out, multicenter, maxIter, numRepetitions, printable, instanceFormat);
+    execute(instancePath, n, k, L, maxIter, numRepetitions, printable, instanceFormat);
 
     return 0;
 }
