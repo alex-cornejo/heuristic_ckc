@@ -62,7 +62,7 @@ void CkcSolver::computeScore(float r) {
     }
 }
 
-void CkcSolver::updateScore(std::pair<int, std::vector<int>> &ca, float r){
+void CkcSolver::updateScore(std::pair<int, std::vector<int>> &ca, float r) {
 
     for (int v : ca.second) {
         for (int j = 0; j < n; j++) {
@@ -211,7 +211,7 @@ std::map<int, std::vector<int>> CkcSolver::getFeasibleSolution(float r, int iter
     std::map<int, std::vector<int>> CA;
     std::vector<int> C;
     std::vector<std::vector<int>> A;
-    for (int i = 0; i < k && unassignedCount>0; i++) {
+    for (int i = 0; i < k && unassignedCount > 0; i++) {
 
         std::pair<int, std::vector<int>> ca;
 
@@ -284,7 +284,9 @@ std::map<int, std::vector<int>> CkcSolver::getFeasibleSolution(float r, int iter
     }
 
     // put unassigned vertices
-    assignMissingVertices(C, A);
+    if (unassignedCount > 0) {
+        assignMissingVertices(C, A);
+    }
     for (int l = 0; l < C.size(); ++l) {
         CA.insert({C[l], A[l]});
     }
@@ -293,7 +295,7 @@ std::map<int, std::vector<int>> CkcSolver::getFeasibleSolution(float r, int iter
 
 std::map<int, std::vector<int>> CkcSolver::solve() {
 
-    int high = w.size()-1;
+    int high = w.size() - 1;
     int low = 0;
 
     std::map<int, std::vector<int>> A;
@@ -318,9 +320,9 @@ std::map<int, std::vector<int>> CkcSolver::solve() {
         }
 
         if (coverRadius <= r) {
-            high = mid-1;
+            high = mid - 1;
         } else {
-            low = mid+1;
+            low = mid + 1;
         }
     }
 
