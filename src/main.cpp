@@ -60,13 +60,14 @@ void execute(std::string &instancePath, int n, int k, int L,
         // start time
         clock_t begin = clock();
 
-        auto A = solver.solve();
+        std::map<int, std::vector<int>> A;
+        float solutionSizeTmp;
+        std::tie(A, solutionSizeTmp) = solver.solve();
 
         // finish time
         clock_t end = clock();
         double time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
 
-        auto solutionSizeTmp = solver.getRadio(A);
         totalTime += time_spent;
         solutionSizeSum += solutionSizeTmp;
         solutionSizeArr[i] = solutionSizeTmp;

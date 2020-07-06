@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <tuple>
 
 CkcSolver::CkcSolver(int k, int L, const std::vector<std::vector<float>> &G, int numRepetitions) :
         k(k), L(L), G(G), numRepetitions(numRepetitions) {
@@ -293,7 +294,7 @@ std::map<int, std::vector<int>> CkcSolver::getFeasibleSolution(float r, int iter
     return CA;
 }
 
-std::map<int, std::vector<int>> CkcSolver::solve() {
+std::tuple<std::map<int, std::vector<int>>, float> CkcSolver::solve() {
 
     int high = w.size() - 1;
     int low = 0;
@@ -325,6 +326,5 @@ std::map<int, std::vector<int>> CkcSolver::solve() {
             low = mid + 1;
         }
     }
-
-    return A;
+    return std::make_tuple(A, coverRadius);
 }

@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <map>
+#include <tuple>
 
 class CkcSolver {
 public:
@@ -50,7 +51,7 @@ public:
 
     std::map<int, std::vector<int>> getFeasibleSolution(float r, int iter);
 
-    std::map<int, std::vector<int>> solve();
+    std::tuple<std::map<int, std::vector<int>>, float> solve();
 
     void updateScore(std::pair<int, std::vector<int>> &ca, float r);
 };
