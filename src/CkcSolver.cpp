@@ -5,8 +5,6 @@
 #include "CkcSolver.h"
 #include <algorithm>
 #include <cmath>
-#include <iostream>
-#include <tuple>
 
 CkcSolver::CkcSolver(int k, int L, const std::vector<std::vector<float>> &G, int numRepetitions) :
         k(k), L(L), G(G), numRepetitions(numRepetitions) {

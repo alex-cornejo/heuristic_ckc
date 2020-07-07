@@ -3,12 +3,9 @@
 //
 
 #include "KCSolution.h"
-#include <boost/property_tree/json_parser.hpp>
 
 // for convenience
 using json = nlohmann::json;
-
-using boost::property_tree::ptree;
 
 const std::string &KCSolution::getInstance() const {
     return instance;
@@ -36,7 +33,7 @@ std::string KCSolution::toJson() {
     json centersJson;
     for (auto &center : getCenters()) {
         centersJson.push_back({{"center", center.getCenter()},
-                                    {"nodes",  center.getNodes()}});
+                               {"nodes",  center.getNodes()}});
     }
     bodyJson["centers"] = centersJson;
     return bodyJson.dump();
