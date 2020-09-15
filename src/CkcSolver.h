@@ -30,6 +30,8 @@ private:
     std::vector<float> distances;
     std::vector<std::vector<int>> refMatrix;
 
+    float addMissingCenters(std::map<int, std::vector<int>> &A, float r);
+
 public:
     void loadEdges();
 

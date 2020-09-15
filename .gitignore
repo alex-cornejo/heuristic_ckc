@@ -40,6 +40,7 @@ cmake-build-debug/
 bin/
 build/
 *.cbp
+venv/
 
 #CMAKE
 CMakeLists.txt.user

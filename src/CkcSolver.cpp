@@ -324,5 +324,39 @@ std::tuple<std::map<int, std::vector<int>>, float> CkcSolver::solve() {
             low = mid + 1;
         }
     }
+
+    if (A.size() < k) {
+        coverRadius = addMissingCenters(A, coverRadius);
+    }
+
     return std::make_tuple(A, coverRadius);
+}
+
+float CkcSolver::addMissingCenters(std::map<int, std::vector<int>> &A, float r) {
+
+    int missingCenters = k - A.size();
+    std::vector<std::vector<float>> dV2C;
+    dV2C.reserve(n);
+    for (auto &a : A) {
+        for (int v : a.second) {
+            dV2C.push_back({(float) a.first, (float) v, G[a.first][v]});
+            // center; vertex; distance(vertex, center)
+        }
+    }
+    std::sort(dV2C.begin(), dV2C.end(),
+              [](auto &v1, auto &v2) { return v1[2] > v2[2]; });
+    if (dV2C[missingCenters][2] < r) {
+        r = dV2C[missingCenters][2];
+        for (int i = 0; i < missingCenters; ++i) {
+            int v = dV2C[i][1];
+            int c = dV2C[i][0];
+
+            // convert v in center
+            A.insert({v, {}});
+
+            // remove v from assignment
+            A[c].erase(std::remove(A[c].begin(), A[c].end(), v), A[c].end());
+        }
+    }
+    return r;
 }
