@@ -11,28 +11,37 @@ CkcSolver::CkcSolver(int k, int L, const std::vector<std::vector<float>> &G, int
     n = G.size();
     loadEdges();
     loadRefMatrix();
-    init();
-}
-
-void CkcSolver::init() {
-    unassignedCount = n;
 
     //reset assigned vertices
-    assigned.clear();
     assigned.resize(n);
 
     //reset assigned centers
-    centers.clear();
     centers.resize(n);
 
     //reset capacities
-    capacities.clear();
     capacities.resize(k);
     std::fill(capacities.begin(), capacities.end(), L);
 
     //reset distances for all v to C
-    distances.clear();
     distances.resize(n);
+    std::fill(distances.begin(), distances.end(), std::numeric_limits<float>::infinity());
+
+    reset();
+}
+
+void CkcSolver::reset() {
+    unassignedCount = n;
+
+    //reset assigned vertices
+    std::fill(assigned.begin(), assigned.end(), false);
+
+    //reset assigned centers
+    std::fill(centers.begin(), centers.end(), false);
+
+    //reset capacities
+    std::fill(capacities.begin(), capacities.end(), L);
+
+    //reset distances for all v to C
     std::fill(distances.begin(), distances.end(), std::numeric_limits<float>::infinity());
 }
 
@@ -308,7 +317,7 @@ std::tuple<std::map<int, std::vector<int>>, float> CkcSolver::solve() {
         for (int iter = 0; iter < numRepetitions; iter++) {
             srand(seed++);
 
-            init();
+            reset();
             APrime = getFeasibleSolution(r, iter);
             float coverRadiusTmp = getRadio(APrime);
 

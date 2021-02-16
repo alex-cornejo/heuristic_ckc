@@ -39,7 +39,7 @@ public:
 
     void updateDistances(int c);
 
-    void init();
+    void reset();
 
     void loadRefMatrix();
 
