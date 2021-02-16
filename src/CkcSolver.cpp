@@ -116,7 +116,7 @@ int CkcSolver::getFVertex(std::vector<int> &C, int iter) {
     if (!C.empty()) {
 
         // get farthest vertex
-        float maxDist = 0;
+        float maxDist = -1;
         for (int i = 0; i < n; i++) {
             float dist = distances[i];
             if (maxDist < dist && !assigned[i]) {
@@ -159,7 +159,7 @@ std::pair<int, std::vector<int>> CkcSolver::distanceBasedSelectionConstant(std::
 
         // get f_ref vertex
         int fref = 0;
-        float maxDist = 0;
+        float maxDist = -1;
         for (int j = 0; j < n; j++) {
 
             float dist = std::min(distances[j], G[j][v]);
@@ -323,8 +323,8 @@ std::tuple<std::pair<std::vector<int>, std::vector<int>>, float> CkcSolver::solv
         else low = mid + 1;
     }
 
-//    if (A.first.size() < k)
-//        coverRadius = addMissingCenters(A, coverRadius);
+    if (A.first.size() < k)
+        coverRadius = addMissingCenters(A, coverRadius);
 
     return std::make_tuple(A, coverRadius);
 }

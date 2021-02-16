@@ -19,10 +19,13 @@ KCSolution toKCModel(std::pair<std::vector<int>, std::vector<int>> &A) {
     return kcSolution;
 }
 
-void validateSolution(KCSolution &kcSolution, int n) {
+void validateSolution(KCSolution &kcSolution, int n, int L) {
     bool valid = true;
     std::vector<int> repetitions(n);
     for (auto &c : kcSolution.getCenters()) {
+        if (c.getNodes().size() > L)
+            std::cerr << "Center " << c.getCenter() << " has " << c.getNodes().size() << " nodes assigned !!!"
+                      << std::endl;
         repetitions[c.getCenter()]++;
         for (int i : c.getNodes()) {
             repetitions[i]++;
@@ -91,7 +94,7 @@ void execute(std::string &instancePath, int n, int k, int L,
 
     KCSolution kcSolution = toKCModel(bestAssignment);
     kcSolution.setInstance(instancePath);
-    validateSolution(kcSolution, n);
+    validateSolution(kcSolution, n, L);
 
     if (printable) {
         std::cout << std::endl << kcSolution.toJson() << std::endl;
