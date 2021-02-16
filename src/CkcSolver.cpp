@@ -110,7 +110,7 @@ int CkcSolver::getFVertex(std::vector<int> &C, int iter) {
     if (!C.empty()) {
 
         // get farthest vertex
-        float maxDist = 0;
+        float maxDist = -1;
         for (int i = 0; i < n; i++) {
             float dist = distances[i];
             if (maxDist < dist && !assigned[i]) {
