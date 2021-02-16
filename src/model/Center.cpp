@@ -19,3 +19,7 @@ const std::vector<int> &Center::getNodes() const {
 void Center::setNodes(const std::vector<int> &nodes) {
     Center::nodes = nodes;
 }
+
+void Center::addNode(int node) {
+    Center::nodes.push_back(node);
+}

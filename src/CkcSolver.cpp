@@ -11,28 +11,38 @@ CkcSolver::CkcSolver(int k, int L, const std::vector<std::vector<float>> &G, int
     n = G.size();
     loadEdges();
     loadRefMatrix();
-    init();
+
+    //init assigned vertices
+    assigned.resize(n);
+
+    //init assigned centers
+    centers.resize(n);
+
+    //init capacities
+    capacities.resize(n);
+
+    //reset distances for all v to C
+    distances.resize(n);
+
+    //reset scores
+    scores.resize(n);
+
+    reset();
 }
 
-void CkcSolver::init() {
+void CkcSolver::reset() {
     unassignedCount = n;
 
     //reset assigned vertices
-    assigned.clear();
-    assigned.resize(n);
+    std::fill(assigned.begin(), assigned.end(), false);
 
     //reset assigned centers
-    centers.clear();
-    centers.resize(n);
+    std::fill(centers.begin(), centers.end(), false);
 
     //reset capacities
-    capacities.clear();
-    capacities.resize(k);
     std::fill(capacities.begin(), capacities.end(), L);
 
     //reset distances for all v to C
-    distances.clear();
-    distances.resize(n);
     std::fill(distances.begin(), distances.end(), std::numeric_limits<float>::infinity());
 }
 
@@ -49,14 +59,12 @@ void CkcSolver::loadEdges() {
 void CkcSolver::computeScore(float r) {
 
     //reset scores
-    scores.clear();
-    scores.resize(n);
+    std::fill(scores.begin(), scores.end(), 0);
 
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
-            if (i != j) {
-                if (G[i][j] <= r) scores[i]++;
-            }
+            if (i != j && G[i][j] <= r)
+                scores[i]++;
         }
     }
 }
@@ -72,17 +80,15 @@ void CkcSolver::updateScore(std::pair<int, std::vector<int>> &ca, float r) {
     }
     int v = ca.first;
     for (int j = 0; j < n; j++) {
-        if (v != j && G[v][j] <= r) {
+        if (v != j && G[v][j] <= r)
             scores[j]--;
-        }
     }
 }
 
 void CkcSolver::updateDistances(int c) {
     for (int i = 0; i < n; i++) {
-        if (G[i][c] < distances[i]) {
+        if (G[i][c] < distances[i])
             distances[i] = G[i][c];
-        }
     }
 }
 
@@ -95,8 +101,8 @@ void CkcSolver::loadRefMatrix() {
         for (int j = n - 1; j >= 0; j--, ir++) {
             vertexReferences[ir] = {(float) j, G[i][j]};
         }
-        std::stable_sort(vertexReferences.begin(), vertexReferences.end(),
-                         [](auto &v1, auto &v2) { return v1[1] > v2[1]; });
+        std::sort(vertexReferences.begin(), vertexReferences.end(),
+                  [](auto &v1, auto &v2) { return v1[1] > v2[1]; });
         std::vector<int> references(n);
         for (int j = 0; j < n; j++) {
             references[j] = (int) vertexReferences[j][0];
@@ -110,7 +116,7 @@ int CkcSolver::getFVertex(std::vector<int> &C, int iter) {
     if (!C.empty()) {
 
         // get farthest vertex
-        float maxDist = 0;
+        float maxDist = -1;
         for (int i = 0; i < n; i++) {
             float dist = distances[i];
             if (maxDist < dist && !assigned[i]) {
@@ -124,24 +130,22 @@ int CkcSolver::getFVertex(std::vector<int> &C, int iter) {
     return f;
 }
 
-void CkcSolver::assignMissingVertices(std::vector<int> &C, std::vector<std::vector<int>> &A) {
+void CkcSolver::assignMissingVertices(std::vector<int> &C, std::vector<int> &f_c) {
 
     for (int j = 0; j < n; j++) {
         if (!assigned[j]) {
             float minDist = +INFINITY;
-            int iClosestCenter = 0;
-            int ic = 0;
+            int closestC = -1;
             for (int c : C) {
-                if (capacities[ic] > 0 && G[c][j] < minDist) {
+                if (capacities[c] > 0 && G[c][j] < minDist) {
                     minDist = G[c][j];
-                    iClosestCenter = ic;
+                    closestC = c;
                 }
-                ic++;
             }
-            capacities[iClosestCenter]--;
+            capacities[closestC]--;
             unassignedCount--;
             assigned[j] = true;
-            A[iClosestCenter].push_back(j);
+            f_c[j] = closestC;
         }
     }
 }
@@ -155,7 +159,7 @@ std::pair<int, std::vector<int>> CkcSolver::distanceBasedSelectionConstant(std::
 
         // get f_ref vertex
         int fref = 0;
-        float maxDist = 0;
+        float maxDist = -1;
         for (int j = 0; j < n; j++) {
 
             float dist = std::min(distances[j], G[j][v]);
@@ -192,24 +196,24 @@ std::pair<int, std::vector<int>> CkcSolver::distanceBasedSelectionConstant(std::
     return ca;
 }
 
-float CkcSolver::getRadio(std::map<int, std::vector<int>> &A) {
+float CkcSolver::getRadio(std::pair<std::vector<int>, std::vector<int>> &A) {
     float maxDist = -1;
-    for (auto &c : A) {
-        for (int v : c.second) {
-            int z = c.first;
-            if (G[z][v] > maxDist) {
-                maxDist = G[c.first][v];
-            }
-        }
+
+    for (int i = 0; i < n; ++i) {
+        int c = A.second[i];
+        if (c >= 0 && G[i][c] > maxDist)
+            maxDist = G[i][c];
     }
     return maxDist;
 }
 
-std::map<int, std::vector<int>> CkcSolver::getFeasibleSolution(float r, int iter) {
+std::pair<std::vector<int>, std::vector<int>> CkcSolver::getFeasibleSolution(float r, int iter) {
     computeScore(r);
-    std::map<int, std::vector<int>> CA;
+    std::vector<int> f_c(n);
+    std::fill(f_c.begin(), f_c.end(), -1);
     std::vector<int> C;
-    std::vector<std::vector<int>> A;
+    C.reserve(k);
+
     for (int i = 0; i < k && unassignedCount > 0; i++) {
 
         std::pair<int, std::vector<int>> ca;
@@ -266,49 +270,47 @@ std::map<int, std::vector<int>> CkcSolver::getFeasibleSolution(float r, int iter
         }
 
         centers[ca.first] = true; // center is checked as center
-        assigned[ca.first] = true; //center is checked as assigned
+        assigned[ca.first] = true; //center is checked as assigned to avoid to be considered in future
 
         // vertices covered by center are checked as assigned
         for (int v : ca.second) {
             assigned[v] = true;
+            f_c[v] = ca.first;  // assignment of vertices
         }
-        capacities[i] -= ca.second.size(); // capacity of center i-th is reduced
+
+        capacities[ca.first] -= ca.second.size(); // capacity of center i-th is reduced
         unassignedCount -= ca.second.size() + 1; // +1 center is not considered
 
         updateScore(ca, r);
 
         C.push_back(ca.first);
-        A.push_back(ca.second);
         updateDistances(ca.first);
     }
 
     // put unassigned vertices
     if (unassignedCount > 0) {
-        assignMissingVertices(C, A);
+        assignMissingVertices(C, f_c);
     }
-    for (int l = 0; l < C.size(); ++l) {
-        CA.insert({C[l], A[l]});
-    }
-    return CA;
+    return std::make_pair(C, f_c);
 }
 
-std::tuple<std::map<int, std::vector<int>>, float> CkcSolver::solve() {
+std::tuple<std::pair<std::vector<int>, std::vector<int>>, float> CkcSolver::solve() {
 
     int high = w.size() - 1;
     int low = 0;
 
-    std::map<int, std::vector<int>> A;
+    std::pair<std::vector<int>, std::vector<int>> A;
     float coverRadius = +INFINITY;
 
     while (low <= high) {
 
         int mid = (high + low) / 2;
         float r = w[mid];
-        std::map<int, std::vector<int>> APrime;
+        std::pair<std::vector<int>, std::vector<int>> APrime;
         for (int iter = 0; iter < numRepetitions; iter++) {
             srand(seed++);
 
-            init();
+            reset();
             APrime = getFeasibleSolution(r, iter);
             float coverRadiusTmp = getRadio(APrime);
 
@@ -317,46 +319,34 @@ std::tuple<std::map<int, std::vector<int>>, float> CkcSolver::solve() {
                 A = APrime;
             }
         }
-
-        if (coverRadius <= r) {
-            high = mid - 1;
-        } else {
-            low = mid + 1;
-        }
+        if (coverRadius <= r) high = mid - 1;
+        else low = mid + 1;
     }
 
-    if (A.size() < k) {
+    if (A.first.size() < k)
         coverRadius = addMissingCenters(A, coverRadius);
-    }
 
     return std::make_tuple(A, coverRadius);
 }
 
-float CkcSolver::addMissingCenters(std::map<int, std::vector<int>> &A, float r) {
+float CkcSolver::addMissingCenters(std::pair<std::vector<int>, std::vector<int>> &A, float r) {
 
-    int missingCenters = k - A.size();
+    int q = k - A.first.size();
     std::vector<std::vector<float>> dV2C;
-    dV2C.reserve(n);
-    for (auto &a : A) {
-        for (int v : a.second) {
-            dV2C.push_back({(float) a.first, (float) v, G[a.first][v]});
-            // center; vertex; distance(vertex, center)
-        }
+    dV2C.reserve(n - k);
+    for (int i = 0; i < n; ++i) {
+        int c = A.second[i];
+        if (c >= 0)
+            dV2C.push_back({(float) c, (float) i, G[c][i]});
     }
+
     std::sort(dV2C.begin(), dV2C.end(),
               [](auto &v1, auto &v2) { return v1[2] > v2[2]; });
-    if (dV2C[missingCenters][2] < r) {
-        r = dV2C[missingCenters][2];
-        for (int i = 0; i < missingCenters; ++i) {
-            int v = dV2C[i][1];
-            int c = dV2C[i][0];
-
-            // convert v in center
-            A.insert({v, {}});
-
-            // remove v from assignment
-            A[c].erase(std::remove(A[c].begin(), A[c].end(), v), A[c].end());
-        }
+    r = dV2C[q][2];
+    for (int i = 0; i < q; ++i) {
+        int v = dV2C[i][1];
+        A.first.push_back(v);   //convert v to center
+        A.second[v] = -1;  // remove assignment of v
     }
     return r;
 }
