@@ -95,8 +95,8 @@ void CkcSolver::loadRefMatrix() {
         for (int j = n - 1; j >= 0; j--, ir++) {
             vertexReferences[ir] = {(float) j, G[i][j]};
         }
-        std::stable_sort(vertexReferences.begin(), vertexReferences.end(),
-                         [](auto &v1, auto &v2) { return v1[1] > v2[1]; });
+        std::sort(vertexReferences.begin(), vertexReferences.end(),
+                  [](auto &v1, auto &v2) { return v1[1] > v2[1]; });
         std::vector<int> references(n);
         for (int j = 0; j < n; j++) {
             references[j] = (int) vertexReferences[j][0];
@@ -110,7 +110,7 @@ int CkcSolver::getFVertex(std::vector<int> &C, int iter) {
     if (!C.empty()) {
 
         // get farthest vertex
-        float maxDist = 0;
+        float maxDist = -1;
         for (int i = 0; i < n; i++) {
             float dist = distances[i];
             if (maxDist < dist && !assigned[i]) {
@@ -317,17 +317,12 @@ std::tuple<std::map<int, std::vector<int>>, float> CkcSolver::solve() {
                 A = APrime;
             }
         }
-
-        if (coverRadius <= r) {
-            high = mid - 1;
-        } else {
-            low = mid + 1;
-        }
+        if (coverRadius <= r) high = mid - 1;
+        else low = mid + 1;
     }
 
-    if (A.size() < k) {
+    if (A.size() < k)
         coverRadius = addMissingCenters(A, coverRadius);
-    }
 
     return std::make_tuple(A, coverRadius);
 }

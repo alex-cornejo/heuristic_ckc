@@ -25,7 +25,7 @@ private:
     std::vector<bool> centers;
     int numRepetitions;
     std::vector<int> capacities;
-    int unassignedCount; // tracks the unassigned vertices
+    int unassignedCount; // tracks the amount of unassigned vertices
     int seed = 0;
     std::vector<float> distances;
     std::vector<std::vector<int>> refMatrix;
