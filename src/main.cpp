@@ -1,5 +1,7 @@
 #include <iostream>
 #include <chrono>
+#include <cmath>
+#include <cstring>
 #include "util/Utils.h"
 #include "CkcSolver.h"
 #include "model/KCSolution.h"

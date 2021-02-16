@@ -110,7 +110,7 @@ int CkcSolver::getFVertex(std::vector<int> &C, int iter) {
     if (!C.empty()) {
 
         // get farthest vertex
-        float maxDist = 0;
+        float maxDist = -1;
         for (int i = 0; i < n; i++) {
             float dist = distances[i];
             if (maxDist < dist && !assigned[i]) {
@@ -299,7 +299,6 @@ std::tuple<std::map<int, std::vector<int>>, float> CkcSolver::solve() {
 
     std::map<int, std::vector<int>> A;
     float coverRadius = +INFINITY;
-
     while (low <= high) {
 
         int mid = (high + low) / 2;
@@ -325,18 +324,67 @@ std::tuple<std::map<int, std::vector<int>>, float> CkcSolver::solve() {
         }
     }
 
-    if (A.size() < k) {
-        coverRadius = addMissingCenters(A, coverRadius);
-    }
+//    if (A.size() < k) {
+//        coverRadius = addMissingCenters(A, coverRadius);
+//    }
 
     return std::make_tuple(A, coverRadius);
 }
+
+//std::tuple<std::map<int, std::vector<int>>, float> CkcSolver::solve() {
+//
+//    std::map<int, std::vector<int>> A;
+//    float coverRadius = +INFINITY;
+//    for (int iter = 0; iter < numRepetitions; iter++) {
+//        float coverRadiusTmp = +INFINITY;
+//        std::map<int, std::vector<int>> APrime;
+//        int high = w.size() - 1;
+//        int low = 0;
+//        while (low <= high) {
+//
+//            int mid = (high + low) / 2;
+//            float r = w[mid];
+//
+//            srand(seed++);
+//
+//            init();
+//            auto APrime2 = getFeasibleSolution(r, iter);
+//            float coverRadiusTmp2 = getRadio(APrime2);
+//
+//            if (coverRadiusTmp2 <= coverRadiusTmp) {
+//                coverRadiusTmp = coverRadiusTmp2;
+//                APrime = APrime2;
+//            }
+//
+//            if (coverRadiusTmp <= r) {
+//                high = mid - 1;
+//            } else {
+//                low = mid + 1;
+//            }
+//        }
+//
+//        if (A.size() < k) {
+//            coverRadiusTmp = addMissingCenters(APrime, coverRadiusTmp);
+//        }
+//
+//        if (coverRadiusTmp <= coverRadius) {
+//            coverRadius = coverRadiusTmp;
+//            A = APrime;
+//        }
+//    }
+//
+////    if (A.size() < k) {
+////        coverRadius = addMissingCenters(A, coverRadius);
+////    }
+//
+//    return std::make_tuple(A, coverRadius);
+//}
 
 float CkcSolver::addMissingCenters(std::map<int, std::vector<int>> &A, float r) {
 
     int missingCenters = k - A.size();
     std::vector<std::vector<float>> dV2C;
-    dV2C.reserve(n);
+    dV2C.reserve(n - k);
     for (auto &a : A) {
         for (int v : a.second) {
             dV2C.push_back({(float) a.first, (float) v, G[a.first][v]});
@@ -345,18 +393,50 @@ float CkcSolver::addMissingCenters(std::map<int, std::vector<int>> &A, float r) 
     }
     std::sort(dV2C.begin(), dV2C.end(),
               [](auto &v1, auto &v2) { return v1[2] > v2[2]; });
-    if (dV2C[missingCenters][2] < r) {
-        r = dV2C[missingCenters][2];
-        for (int i = 0; i < missingCenters; ++i) {
-            int v = dV2C[i][1];
-            int c = dV2C[i][0];
 
-            // convert v in center
-            A.insert({v, {}});
 
-            // remove v from assignment
-            A[c].erase(std::remove(A[c].begin(), A[c].end(), v), A[c].end());
-        }
+//    if (dV2C[missingCenters][2] < r) {
+//        r = dV2C[missingCenters][2];
+    for (int i = 0; i < missingCenters; ++i) {
+        int v = dV2C[i][1];
+        int c = dV2C[i][0];
+
+        // convert v in center
+        A.insert({v, {}});
+
+        // remove v from assignment
+        A[c].erase(std::remove(A[c].begin(), A[c].end(), v), A[c].end());
     }
-    return r;
+
+        r = getRadio(A);
+
+        // exploit new centers
+        for (int i = missingCenters; i < n-k; ++i) {
+            int c = dV2C[i][0];
+            int v = dV2C[i][1];
+
+            int new_c = -1;
+            float curr_r = -1;
+//            float curr_r = +INFINITY;
+            bool changed = false;
+            for (auto &a : A) {
+                if (a.second.size() < L && G[a.first][v] < r && G[a.first][v]>curr_r) {
+                    new_c = a.first;
+                    curr_r = G[a.first][v];
+                    changed = true;
+                }
+            }
+
+            // assigment changed?
+            if(changed){
+
+                // erease old assignment
+                A[c].erase(std::remove(A[c].begin(), A[c].end(), v), A[c].end());
+
+                // re-assign
+                A[new_c].push_back(v);
+            }
+        }
+//    }
+    return getRadio(A);
 }
