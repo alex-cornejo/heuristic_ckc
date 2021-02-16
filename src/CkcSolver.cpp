@@ -101,7 +101,7 @@ void CkcSolver::loadRefMatrix() {
         for (int j = n - 1; j >= 0; j--, ir++) {
             vertexReferences[ir] = {(float) j, G[i][j]};
         }
-        std::stable_sort(vertexReferences.begin(), vertexReferences.end(),
+        std::sort(vertexReferences.begin(), vertexReferences.end(),
                   [](auto &v1, auto &v2) { return v1[1] > v2[1]; });
         std::vector<int> references(n);
         for (int j = 0; j < n; j++) {
@@ -275,7 +275,7 @@ std::pair<std::vector<int>, std::vector<int>> CkcSolver::getFeasibleSolution(flo
         // vertices covered by center are checked as assigned
         for (int v : ca.second) {
             assigned[v] = true;
-            f_c[v] = ca.first;
+            f_c[v] = ca.first;  // assignment of vertices
         }
 
         capacities[ca.first] -= ca.second.size(); // capacity of center i-th is reduced
