@@ -4,12 +4,16 @@
 #include "CkcSolver.h"
 #include "model/KCSolution.h"
 
-KCSolution toKCModel(std::map<int, std::vector<int>> &A) {
+KCSolution toKCModel(std::pair<std::vector<int>, std::vector<int>> &A) {
     KCSolution kcSolution;
-    for (auto &assignment : A) {
+
+    for (int c : A.first) {
         Center center;
-        center.setCenter(assignment.first);
-        center.setNodes(assignment.second);
+        center.setCenter(c);
+        for (int i = 0; i < A.second.size(); ++i) {
+            if (A.second[i] == c)
+                center.addNode(i);
+        }
         kcSolution.addCenter(center);
     }
     return kcSolution;
@@ -53,14 +57,14 @@ void execute(std::string &instancePath, int n, int k, int L,
 
     std::vector<float> solutionSizeArr(maxIter);
     CkcSolver solver(k, L, G, numRepetitions);
-    std::map<int, std::vector<int>> bestAssignment;
+    std::pair<std::vector<int>, std::vector<int>> bestAssignment;
     float bestFitness = +INFINITY;
     for (int i = 0; i < maxIter; i++) {
 
         // start time
         clock_t begin = clock();
 
-        std::map<int, std::vector<int>> A;
+        std::pair<std::vector<int>, std::vector<int>> A;
         float solutionSizeTmp;
         std::tie(A, solutionSizeTmp) = solver.solve();
 

@@ -21,6 +21,8 @@ public:
     const std::vector<int> &getNodes() const;
 
     void setNodes(const std::vector<int> &nodes);
+
+    void addNode(int node);
 };
 
 

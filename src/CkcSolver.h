@@ -30,8 +30,6 @@ private:
     std::vector<float> distances;
     std::vector<std::vector<int>> refMatrix;
 
-    float addMissingCenters(std::map<int, std::vector<int>> &A, float r);
-
 public:
     void loadEdges();
 
@@ -45,17 +43,19 @@ public:
 
     int getFVertex(std::vector<int> &C, int iter);
 
-    void assignMissingVertices(std::vector<int> &C, std::vector<std::vector<int>> &A);
+    void assignMissingVertices(std::vector<int> &C, std::vector<int> &A);
 
     std::pair<int, std::vector<int>> distanceBasedSelectionConstant(std::vector<int> &NgL, float r);
 
-    float getRadio(std::map<int, std::vector<int>> &A);
-
-    std::map<int, std::vector<int>> getFeasibleSolution(float r, int iter);
-
-    std::tuple<std::map<int, std::vector<int>>, float> solve();
-
     void updateScore(std::pair<int, std::vector<int>> &ca, float r);
+
+    float getRadio(std::pair<std::vector<int>, std::vector<int>> &A);
+
+    std::pair<std::vector<int>, std::vector<int>> getFeasibleSolution(float r, int iter);
+
+    float addMissingCenters(std::pair<std::vector<int>, std::vector<int>> &A, float r);
+
+    std::tuple<std::pair<std::vector<int>, std::vector<int>>, float> solve();
 };
 
 
