@@ -28,7 +28,8 @@ void KCSolution::addCenter(Center &center) {
 }
 
 std::string KCSolution::toJson() {
-    json bodyJson = {{"instance", getInstance()}};
+    json bodyJson = {{"instance", getInstance()},
+                     {"type",     type}};
 
     json centersJson;
     for (auto &center : getCenters()) {
@@ -37,4 +38,8 @@ std::string KCSolution::toJson() {
     }
     bodyJson["centers"] = centersJson;
     return bodyJson.dump();
+}
+
+KCSolution::KCSolution() {
+    type = "cvkp";
 }

@@ -1,8 +1,11 @@
 #include <iostream>
 #include <chrono>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string.hpp>
 #include "util/Utils.h"
 #include "CkcSolver.h"
 #include "model/KCSolution.h"
+#include <fstream>
 
 KCSolution toKCModel(std::pair<std::vector<int>, std::vector<int>> &A) {
     KCSolution kcSolution;
@@ -87,17 +90,30 @@ void execute(std::string &instancePath, int n, int k, int L,
 
     auto average = solutionSizeSum / maxIter;
 
-    std::cout << "\nAverage size: " << average << std::endl;
-    std::cout << "Standard deviation: " << Utils::stdDev(solutionSizeArr, average) << std::endl;
-    std::cout << "\nTotal time: " << totalTime << std::endl;
-    std::cout << "Time per running: " << (totalTime / maxIter) << std::endl;
+    std::cout <<bestFitness<<std::endl;
+//    std::cout << "\n Best size: " << bestFitness;
+//    std::cout << "\nAverage size: " << average << std::endl;
+//    std::cout << "Standard deviation: " << Utils::stdDev(solutionSizeArr, average) << std::endl;
+//    std::cout << "\nTotal time: " << totalTime << std::endl;
+//    std::cout << "Time per running: " << (totalTime / maxIter) << std::endl;
 
     KCSolution kcSolution = toKCModel(bestAssignment);
     kcSolution.setInstance(instancePath);
     validateSolution(kcSolution, n, L);
 
     if (printable) {
-        std::cout << std::endl << kcSolution.toJson() << std::endl;
+//        std::cout << std::endl << kcSolution.toJson() << std::endl;
+        std::vector<std::string> line_vec;
+        boost::split(line_vec, instancePath, boost::is_any_of("/"));
+        std::string instance_name = line_vec[line_vec.size() - 1];
+        instance_name.replace(instance_name.size() - 4, 4, "");
+        instance_name.append("-" + std::to_string(k) + "-");
+        instance_name.append(std::to_string(L));
+        instance_name.append(".json");
+//        std::cout << instance_name << std::endl;
+        std::string output_path =  instance_name;
+        std::string content = kcSolution.toJson();
+        Utils::save(output_path, content);
     }
 }
 

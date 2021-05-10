@@ -5,6 +5,7 @@
 #include "CkcSolver.h"
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 
 CkcSolver::CkcSolver(int k, int L, const std::vector<std::vector<float>> &G, int numRepetitions) :
         k(k), L(L), G(G), numRepetitions(numRepetitions) {
@@ -308,6 +309,7 @@ std::tuple<std::pair<std::vector<int>, std::vector<int>>, float> CkcSolver::solv
         float r = w[mid];
         std::pair<std::vector<int>, std::vector<int>> APrime;
         for (int iter = 0; iter < numRepetitions; iter++) {
+//            std::cout<<seed<<std::endl;
             srand(seed++);
 
             reset();

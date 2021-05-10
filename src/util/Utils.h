@@ -19,6 +19,8 @@ public:
     static void floydWarshall(std::vector<std::vector<float>>& G);
 
     static std::vector<std::vector<float>> loadGMetricSpace(int n, const std::string &file_path);
+
+    static bool save(std::string &output_path, std::string &content);
 };
 
 

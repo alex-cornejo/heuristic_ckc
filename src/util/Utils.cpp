@@ -110,8 +110,8 @@ std::vector<std::vector<float>> Utils::loadGMetricSpace(int n, const std::string
                 throw;
             }
 
-            int v1 = stoi(line_vec[0])-1;
-            int v2 = stoi(line_vec[1])-1;
+            int v1 = stoi(line_vec[0]) - 1;
+            int v2 = stoi(line_vec[1]) - 1;
             float w = stof(line_vec[2]);
 
             G[v1][v2] = w;
@@ -147,4 +147,12 @@ float Utils::stdDev(std::vector<float> &items, float average) {
     }
     int n = items.size() > 2 ? items.size() - 1 : items.size();
     return sqrt(std / n);
+}
+
+bool Utils::save(std::string &output_path, std::string &content) {
+    std::ofstream output_file(output_path);
+//    output_file.write(&content, content.size());
+    output_file << content;
+    output_file.close();
+    return true;
 }
