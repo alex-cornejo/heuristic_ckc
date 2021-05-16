@@ -41,21 +41,25 @@ public:
 
     void loadRefMatrix();
 
-    int getFVertex(std::vector<int> &C, int iter);
+    int getFVertex(int idxK, int iter);
 
-    void assignMissingVertices(std::vector<int> &C, std::vector<int> &A);
+    void assignMissingVertices(std::vector<int> &C, std::vector<std::vector<int>> &A);
 
-    std::pair<int, std::vector<int>> distanceBasedSelectionConstant(std::vector<int> &NgL, float r);
+    std::pair<int, std::vector<int>> distanceBasedSelection(std::vector<int> &NgL, float r);
 
     void updateScore(std::pair<int, std::vector<int>> &ca, float r);
 
-    float getRadio(std::pair<std::vector<int>, std::vector<int>> &A);
+    float getRadio(std::pair<std::vector<int>, std::vector<std::vector<int>>> &A);
 
-    std::pair<std::vector<int>, std::vector<int>> getFeasibleSolution(float r, int iter);
+    std::pair<std::vector<int>, std::vector<std::vector<int>>> getFeasibleSolution(float r, int iter);
 
-    float addMissingCenters(std::pair<std::vector<int>, std::vector<int>> &A, float r);
+    float addMissingCenters(std::pair<std::vector<int>, std::vector<std::vector<int>>> &A, float r);
 
-    std::tuple<std::pair<std::vector<int>, std::vector<int>>, float> solve();
+    std::tuple<std::pair<std::vector<int>, std::vector<std::vector<int>>>, float> solve();
+
+    float farthest_distance(int c, int v, std::vector<int> &X);
+
+    float alternate_heuristic(std::pair<std::vector<int>, std::vector<std::vector<int>>> &CA);
 };
 
 

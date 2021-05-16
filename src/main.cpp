@@ -7,18 +7,25 @@
 #include "model/KCSolution.h"
 #include <fstream>
 
-KCSolution toKCModel(std::pair<std::vector<int>, std::vector<int>> &A) {
+using namespace std;
+
+KCSolution toKCModel(pair<vector<int>, vector<vector<int>>> &A) {
     KCSolution kcSolution;
 
-    for (int c : A.first) {
-        Center center;
-        center.setCenter(c);
-        for (int i = 0; i < A.second.size(); ++i) {
-            if (A.second[i] == c)
-                center.addNode(i);
-        }
+    for (int idxC = 0; idxC < A.first.size(); ++idxC) {
+        int c = A.first[idxC];
+        Center center(c, A.second[idxC]);
         kcSolution.addCenter(center);
     }
+//    for (int c : A.first) {
+//        Center center;
+//        center.setCenter(c);
+//        for (int i = 0; i < A.second.size(); ++i) {
+//            if (A.second[i] == c)
+//                center.addNode(i);
+//        }
+//        kcSolution.addCenter(center);
+//    }
     return kcSolution;
 }
 
@@ -63,14 +70,14 @@ void execute(std::string &instancePath, int n, int k, int L,
 
     std::vector<float> solutionSizeArr(maxIter);
     CkcSolver solver(k, L, G, numRepetitions);
-    std::pair<std::vector<int>, std::vector<int>> bestAssignment;
+    pair<vector<int>, vector<vector<int>>> bestAssignment;
     float bestFitness = +INFINITY;
     for (int i = 0; i < maxIter; i++) {
 
         // start time
         clock_t begin = clock();
 
-        std::pair<std::vector<int>, std::vector<int>> A;
+        pair<vector<int>, vector<vector<int>>> A;
         float solutionSizeTmp;
         std::tie(A, solutionSizeTmp) = solver.solve();
 
@@ -90,18 +97,19 @@ void execute(std::string &instancePath, int n, int k, int L,
 
     auto average = solutionSizeSum / maxIter;
 
-    std::cout <<bestFitness<<std::endl;
+    std::cout << bestFitness << std::endl;
 //    std::cout << "\n Best size: " << bestFitness;
 //    std::cout << "\nAverage size: " << average << std::endl;
 //    std::cout << "Standard deviation: " << Utils::stdDev(solutionSizeArr, average) << std::endl;
 //    std::cout << "\nTotal time: " << totalTime << std::endl;
 //    std::cout << "Time per running: " << (totalTime / maxIter) << std::endl;
+//    std::cout << (totalTime / maxIter) << std::endl;
 
     KCSolution kcSolution = toKCModel(bestAssignment);
     kcSolution.setInstance(instancePath);
     validateSolution(kcSolution, n, L);
 
-    if (printable) {
+    if (false) {
 //        std::cout << std::endl << kcSolution.toJson() << std::endl;
         std::vector<std::string> line_vec;
         boost::split(line_vec, instancePath, boost::is_any_of("/"));
@@ -111,7 +119,7 @@ void execute(std::string &instancePath, int n, int k, int L,
         instance_name.append(std::to_string(L));
         instance_name.append(".json");
 //        std::cout << instance_name << std::endl;
-        std::string output_path =  instance_name;
+        std::string output_path = instance_name;
         std::string content = kcSolution.toJson();
         Utils::save(output_path, content);
     }

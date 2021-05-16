@@ -14,6 +14,8 @@ private:
     int center;
     std::vector<int> nodes;
 public:
+    Center(int center, const std::vector<int> &nodes);
+
     int getCenter() const;
 
     void setCenter(int center);

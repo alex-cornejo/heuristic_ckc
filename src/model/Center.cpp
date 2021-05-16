@@ -23,3 +23,5 @@ void Center::setNodes(const std::vector<int> &nodes) {
 void Center::addNode(int node) {
     Center::nodes.push_back(node);
 }
+
+Center::Center(int center, const std::vector<int> &nodes) : center(center), nodes(nodes) {}
