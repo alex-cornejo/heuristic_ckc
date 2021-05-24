@@ -15,7 +15,10 @@ class KCSolution {
 private:
     std::string instance;
     std::vector<Center> centers;
+    std::string type;
 public:
+    KCSolution();
+
     void addCenter(Center &center);
 
     const std::string &getInstance() const;

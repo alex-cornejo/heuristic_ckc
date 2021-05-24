@@ -12,14 +12,14 @@
 
 class CkcSolver {
 public:
-    CkcSolver(int k, int L, const std::vector<std::vector<float>> &G, int numRepetitions);
+    CkcSolver(int k, int L, const std::vector<std::vector<int>> &G, int numRepetitions);
 
 private:
     int k;
     int L;
-    std::vector<std::vector<float>> G;
+    std::vector<std::vector<int>> G;
     int n;
-    std::vector<float> w;
+    std::vector<int> w;
     std::vector<int> scores;
     std::vector<bool> assigned;
     std::vector<bool> centers;
@@ -27,13 +27,13 @@ private:
     std::vector<int> capacities;
     int unassignedCount; // tracks the amount of unassigned vertices
     int seed = 0;
-    std::vector<float> distances;
+    std::vector<int> distances;
     std::vector<std::vector<int>> refMatrix;
 
 public:
     void loadEdges();
 
-    void computeScore(float r);
+    void computeScore(int r);
 
     void updateDistances(int c);
 
@@ -41,21 +41,25 @@ public:
 
     void loadRefMatrix();
 
-    int getFVertex(std::vector<int> &C, int iter);
+    int getFVertex(int idxK, int iter);
 
-    void assignMissingVertices(std::vector<int> &C, std::vector<int> &A);
+    void assignMissingVertices(std::vector<int> &C, std::vector<std::vector<int>> &A);
 
-    std::pair<int, std::vector<int>> distanceBasedSelectionConstant(std::vector<int> &NgL, float r);
+    std::pair<int, std::vector<int>> distanceBasedSelection(std::vector<int> &NgL, int r);
 
-    void updateScore(std::pair<int, std::vector<int>> &ca, float r);
+    void updateScore(std::pair<int, std::vector<int>> &ca, int r);
 
-    float getRadio(std::pair<std::vector<int>, std::vector<int>> &A);
+    int getRadio(std::pair<std::vector<int>, std::vector<std::vector<int>>> &A);
 
-    std::pair<std::vector<int>, std::vector<int>> getFeasibleSolution(float r, int iter);
+    std::pair<std::vector<int>, std::vector<std::vector<int>>> getFeasibleSolution(int r, int iter);
 
-    float addMissingCenters(std::pair<std::vector<int>, std::vector<int>> &A, float r);
+    int addMissingCenters(std::pair<std::vector<int>, std::vector<std::vector<int>>> &CA, int r);
 
-    std::tuple<std::pair<std::vector<int>, std::vector<int>>, float> solve();
+    std::tuple<std::pair<std::vector<int>, std::vector<std::vector<int>>>, int> solve();
+
+    int farthest_distance(int c, int v, std::vector<int> &X);
+
+    int alternate_heuristic(std::pair<std::vector<int>, std::vector<std::vector<int>>> &CA);
 };
 
 

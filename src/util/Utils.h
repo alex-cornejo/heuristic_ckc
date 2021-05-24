@@ -10,15 +10,17 @@
 class Utils {
 
 public:
-    static std::vector<std::vector<float>> loadGEucSpace(const std::string &file_path);
+    static std::vector<std::vector<int>> loadGEucSpace(const std::string &file_path);
 
-    static std::vector<std::vector<float>> readVList(const std::string &file_path);
+    static std::vector<std::vector<int>> readVList(const std::string &file_path);
 
     static float stdDev(std::vector<float> &items, float average);
 
     static void floydWarshall(std::vector<std::vector<float>>& G);
 
     static std::vector<std::vector<float>> loadGMetricSpace(int n, const std::string &file_path);
+
+    static bool save(std::string &output_path, std::string &content);
 };
 
 
