@@ -45,11 +45,11 @@ void validateSolution(KCSolution &kcSolution, int n, int L) {
 void execute(string &instancePath, int n, int k, int L,
              int maxIter, int numRepetitions, bool printable, string &instanceFormat) {
 
-    vector<vector<float>> G;
+    vector<vector<int>> G;
     if (instanceFormat == "tsplib") {
         G = Utils::loadGEucSpace(instancePath);
     } else if (instanceFormat == "orlib") {
-        G = Utils::loadGMetricSpace(n, instancePath);
+//        G = Utils::loadGMetricSpace(n, instancePath);
     } else {
         cerr << "instance format " << instanceFormat << " is not supported!!!" << endl;
         return;
@@ -94,24 +94,25 @@ void execute(string &instancePath, int n, int k, int L,
 //    cout << "\nTotal time: " << totalTime << endl;
 //    cout << "Time per running: " << (totalTime / maxIter) << endl;
 //    cout << (totalTime / maxIter) << endl;
+//    cout << (totalTime / maxIter) << endl;
 
     KCSolution kcSolution = toKCModel(bestAssignment);
     kcSolution.setInstance(instancePath);
     validateSolution(kcSolution, n, L);
 
-    if (false) {
-//        cout << endl << kcSolution.toJson() << endl;
-        vector<string> line_vec;
-        boost::split(line_vec, instancePath, boost::is_any_of("/"));
-        string instance_name = line_vec[line_vec.size() - 1];
-        instance_name.replace(instance_name.size() - 4, 4, "");
-        instance_name.append("-" + to_string(k) + "-");
-        instance_name.append(to_string(L));
-        instance_name.append(".json");
+    if (printable) {
+        cout << kcSolution.toJson() << endl;
+//        vector<string> line_vec;
+//        boost::split(line_vec, instancePath, boost::is_any_of("/"));
+//        string instance_name = line_vec[line_vec.size() - 1];
+//        instance_name.replace(instance_name.size() - 4, 4, "");
+//        instance_name.append("-" + to_string(k) + "-");
+//        instance_name.append(to_string(L));
+//        instance_name.append(".json");
 //        cout << instance_name << endl;
-        string output_path = instance_name;
-        string content = kcSolution.toJson();
-        Utils::save(output_path, content);
+//        string output_path = instance_name;
+//        string content = kcSolution.toJson();
+//        Utils::save(output_path, content);
     }
 }
 
@@ -120,6 +121,7 @@ int main(int argc, char **argv) {
     int n = atoi(argv[2]);
     int k = atoi(argv[3]);
     int L = atoi(argv[4]);
+    L = L-1; // center is not considered in assignment
     int maxIter = atoi(argv[5]);
     int numRepetitions = atoi(argv[6]);
     bool printable = strcmp(argv[7], "true") == 0;

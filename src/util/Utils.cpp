@@ -11,10 +11,12 @@
 #include <fstream>
 #include "Utils.h"
 
-std::vector<std::vector<float>> Utils::loadGEucSpace(const std::string &file_path) {
+using namespace std;
+
+vector<vector<int>> Utils::loadGEucSpace(const string &file_path) {
     auto vertices = readVList(file_path);
     int n = vertices.size();
-    std::vector<std::vector<float>> graph(n, std::vector<float>(n));
+    vector<vector<int>> D(n, vector<int>(n));
 
     for (size_t i = 0; i < n; ++i) {
         for (size_t j = i + 1; j < n; ++j) {
@@ -23,21 +25,19 @@ std::vector<std::vector<float>> Utils::loadGEucSpace(const std::string &file_pat
             auto v2 = vertices[j];
 
             // computing euclidean distance
-            std::vector<float> subtracted(v1.size());
-            std::transform(v1.begin(), v1.end(), v2.begin(), std::back_inserter(subtracted),
-                           [](float a, float b) { return pow(a - b, 2); });
-            float d = sqrt(std::accumulate(subtracted.begin(), subtracted.end(), 0.0f));
-
-            graph[i][j] = d;
-            graph[j][i] = d;
+            vector<int> subtracted(v1.size());
+            transform(v1.begin(), v1.end(), v2.begin(), back_inserter(subtracted),
+                           [](int a, int b) { return pow(a - b, 2); });
+            double d = sqrt(accumulate(subtracted.begin(), subtracted.end(), 0.0));
+            D[j][i] = D[i][j] = (int)(d+0.5);
         }
     }
-    return graph;
+    return D;
 }
 
-std::vector<std::vector<float>> Utils::readVList(const std::string &file_path) {
+std::vector<std::vector<int>> Utils::readVList(const std::string &file_path) {
 
-    std::vector<std::vector<float>> vertices;
+    std::vector<std::vector<int>> vertices;
     std::string line;
     std::ifstream file(file_path);
 
@@ -55,7 +55,7 @@ std::vector<std::vector<float>> Utils::readVList(const std::string &file_path) {
             throw;
         }
 
-        std::vector<float> xy(2);
+        std::vector<int> xy(2);
         if (line_vec.size() == 1) {
             int n = stoi(line);
             vertices.reserve(n);
