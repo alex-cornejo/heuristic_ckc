@@ -33,6 +33,11 @@ NOTE: Previous steps only are needed to be executed once. Once conan libraries a
 sudo apt install cmake
 ```
 
+# Install MPICH for parallel computing
+```
+sudo apt install libmpich-dev
+```
+
 # Compile program
 
 ```
