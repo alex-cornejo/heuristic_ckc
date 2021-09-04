@@ -4,9 +4,20 @@ project(heuristic_ckc)
 set(CMAKE_CXX_STANDARD 14)
 
 #SET(CMAKE_C_FLAGS_DEBUG "-D_DEBUG")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+
 include(build/conanbuildinfo.cmake)
 conan_basic_setup()
 
 add_executable(heuristic_ckc src/main.cpp src/util/Utils.cpp src/util/Utils.h src/CkcSolver.cpp src/CkcSolver.h src/model/Center.cpp src/model/Center.h src/model/KCSolution.cpp src/model/KCSolution.h)
 
 target_link_libraries(heuristic_ckc ${CONAN_LIBS})
+
+# Require MPI for this project:
+find_package(MPI REQUIRED)
+set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
+set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
+include_directories(${MPI_INCLUDE_PATH})
+
+target_link_libraries(heuristic_ckc ${MPI_LIBRARIES})

@@ -30,7 +30,11 @@ private:
     std::vector<int> distances;
     std::vector<std::vector<int>> refMatrix;
 
+
 public:
+    int mpi_size;
+    int mpi_rank;
+
     void loadEdges();
 
     void computeScore(int r);

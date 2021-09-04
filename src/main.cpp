@@ -5,8 +5,12 @@
 #include "util/Utils.h"
 #include "CkcSolver.h"
 #include "model/KCSolution.h"
+#include <mpi.h>
+#include <queue>
 
 using namespace std;
+int mpi_size;
+int mpi_rank;
 
 KCSolution toKCModel(pair<vector<int>, vector<vector<int>>> &A) {
     KCSolution kcSolution;
@@ -22,12 +26,12 @@ KCSolution toKCModel(pair<vector<int>, vector<vector<int>>> &A) {
 void validateSolution(KCSolution &kcSolution, int n, int L) {
     bool valid = true;
     vector<int> repetitions(n);
-    for (auto &c : kcSolution.getCenters()) {
+    for (auto &c: kcSolution.getCenters()) {
         if (c.getNodes().size() > L)
             cerr << "Center " << c.getCenter() << " has " << c.getNodes().size() << " nodes assigned !!!"
                  << endl;
         repetitions[c.getCenter()]++;
-        for (int i : c.getNodes()) {
+        for (int i: c.getNodes()) {
             repetitions[i]++;
         }
     }
@@ -60,6 +64,9 @@ void execute(string &instancePath, int n, int k, int L,
 
     vector<float> solutionSizeArr(maxIter);
     CkcSolver solver(k, L, G, numRepetitions);
+    solver.mpi_rank = mpi_rank;
+    solver.mpi_size = mpi_size;
+
     pair<vector<int>, vector<vector<int>>> bestAssignment;
     float bestFitness = +INFINITY;
     for (int i = 0; i < maxIter; i++) {
@@ -85,49 +92,39 @@ void execute(string &instancePath, int n, int k, int L,
         }
     }
 
-    auto average = solutionSizeSum / maxIter;
+    if (mpi_rank == 0) {
+        auto average = solutionSizeSum / maxIter;
+        cout << bestFitness << "," << average << "," << Utils::stdDev(solutionSizeArr, average) << ","
+             << (totalTime / maxIter) << endl;
 
-    cout << bestFitness << endl;
-//    cout << "\n Best size: " << bestFitness;
-//    cout << "\nAverage size: " << average << endl;
-//    cout << "Standard deviation: " << Utils::stdDev(solutionSizeArr, average) << endl;
-//    cout << "\nTotal time: " << totalTime << endl;
-//    cout << "Time per running: " << (totalTime / maxIter) << endl;
-//    cout << (totalTime / maxIter) << endl;
-//    cout << (totalTime / maxIter) << endl;
+        KCSolution kcSolution = toKCModel(bestAssignment);
+        kcSolution.setInstance(instancePath);
+        validateSolution(kcSolution, n, L);
 
-    KCSolution kcSolution = toKCModel(bestAssignment);
-    kcSolution.setInstance(instancePath);
-    validateSolution(kcSolution, n, L);
-
-    if (printable) {
-        cout << kcSolution.toJson() << endl;
-//        vector<string> line_vec;
-//        boost::split(line_vec, instancePath, boost::is_any_of("/"));
-//        string instance_name = line_vec[line_vec.size() - 1];
-//        instance_name.replace(instance_name.size() - 4, 4, "");
-//        instance_name.append("-" + to_string(k) + "-");
-//        instance_name.append(to_string(L));
-//        instance_name.append(".json");
-//        cout << instance_name << endl;
-//        string output_path = instance_name;
-//        string content = kcSolution.toJson();
-//        Utils::save(output_path, content);
+        if (printable) {
+            cout << kcSolution.toJson() << endl;
+        }
     }
 }
 
 int main(int argc, char **argv) {
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+
     string instancePath = argv[1];
     int n = atoi(argv[2]);
     int k = atoi(argv[3]);
     int L = atoi(argv[4]);
-    L = L-1; // center is not considered in assignment
     int maxIter = atoi(argv[5]);
     int numRepetitions = atoi(argv[6]);
     bool printable = strcmp(argv[7], "true") == 0;
     string instanceFormat = argv[8];
 
     execute(instancePath, n, k, L, maxIter, numRepetitions, printable, instanceFormat);
+
+    MPI_Finalize();
 
     return 0;
 }
