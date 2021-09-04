@@ -41,15 +41,15 @@ sudo apt install libmpich-dev
 # Compile program
 
 ```
-$ cmake -DCMAKE_BUILD_TYPE=Release .
-$ cmake --build .
+cmake -DCMAKE_BUILD_TYPE=Release .
+cmake --build .
 ```
 The binary file will be generated onto the "bin/" folder. Get onto it with ```cd bin/```
 
 # Run
 
 ```
-$ ./ckc_heuristic [file] [n] [k] [L] [ind_rep] [rep] [print] [instance_format]
+./bin/heuristic_ckc [file] [n] [k] [L] [ind_rep] [rep] [print] [instance_format]
 ```
 
 ## Where,
@@ -65,43 +65,39 @@ $ ./ckc_heuristic [file] [n] [k] [L] [ind_rep] [rep] [print] [instance_format]
 | `[print]`    | (string) If true, prints the solutions (centers and assigned centers). Otherwise, only prints the solution size |
 | `[instance_format]`    | (string) Type of instance to use ('tsplib' or 'orlib' are supported). |
 
-# Example
+# Example 1
 ```
-$ ./ckc_heuristic 'pr124.tsp' 124 10 13 1 1 false tsplib
+./bin/heuristic_ckc dataset/URDI-3000/URDI-3000-01.tsp 3000 20 149 10 1 false tsp lib
 ```
 
 ### Output information
 The execution report a output with the following relevant information:
 
+`bestFitness`, `averageFitness`, `standardDeviation`, `timePerRunning`
 ```
-Average size: 3054.91
-Standard deviation: 0
-
-Total time: 0.077
-Time per running: 0.077
+1818,2297.9,203.745,7.03125
 ```
-# Another example
-
+# Example 2 (execution with 3 cores)
 ```
-$ ./ckc_heuristic 'pr124.tsp' 124 10 13 1 1 true tsplib
+mpirun -np 3 ./bin/heuristic_ckc dataset/URDI-3000/URDI-3000-01.tsp 3000 20 149 10 1 false tsplib
 ```
 
 ### Output information
-The execution reports the following relevant information:
-
 ```
-Average size: 3054.91
-Standard deviation: 0
-
-Total time: 0.394
-Time per running: 0.394
-
-{"centers":[{"center":4,"nodes":[0,7,1,2,3,6,5,26,31,27,25,30,28]},{"center":8,"nodes":[15,16,43,44,53]},{"center":9,"no
-des":[50,49,12,48,11,14,13,47,10,46,52,51,45]},{"center":23,"nodes":[24,37,21,22,38,39,20,19,18,17,40,41,42]},{"center":
-60,"nodes":[82,66,64,61,59,57,58,56,55,35,34,54,36]},{"center":65,"nodes":[29,33,32,62,63,67,68,69,70,71,72,73,74]},{"ce
-nter":76,"nodes":[75,77,80,81,83,114,115,116,117,118,119,120]},{"center":78,"nodes":[123,99,98,97,122,96,95,94,93,92,91,
-121,79]},{"center":84,"nodes":[85,86,87,89,90,100]},{"center":104,"nodes":[113,112,111,110,109,105,108,106,107,101,102,1
-03,88]}],"instance":"\\dataset\\pr124.tsp"}
+1818,2297.9,203.745,3.65
  ```
   
+# Example 3 (printing best found solution)
+```
+mpirun -np 3 ./bin/heuristic_ckc dataset/URDI-150/URDI-150-01.tsp 150 5 29 10 1 true tsplib
+```
 
+### Output information
+```
+1891,2067.6,226.917,0.0015625
+{"centers":[{"center":120,"nodes":[109,0,107,30,129,106,145,60,86,63,87,131,16,47,77,108,20,22,24,144,73,133,28,126,139,99,41,29,36]},{"center":11
+1,"nodes":[37,7,14,42,25,2,104,21,12,78,114,19,130,66,68,32,80,110,118,125,103,136,97,34,69,79,8,65,4]},{"center":59,"nodes":[116,61,62,121,53,15,
+134,94,31,112,148,117,101,102,132,124,135,84,38,146,142,70,140,81,11,17,10,113,18]},{"center":71,"nodes":[13,85,143,26,56,74,52,147,27,137,100,51,
+35,83,141,67,23,40,88,6,93,57,44,76,105,49,9,122,127]},{"center":92,"nodes":[1,5,33,39,43,45,46,48,50,54,55,58,64,72,75,82,89,90,91,3,95,96,98,115
+,119,123,128,138,149]}],"instance":"dataset/URDI-150/URDI-150-01.tsp","type":"cvkp"}
+ ```
