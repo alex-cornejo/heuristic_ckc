@@ -4,8 +4,9 @@
 
 #include "CkcSolver.h"
 #include <algorithm>
-#include <cmath>
 #include <iostream>
+#include <mpi.h>
+#include <queue>
 
 using namespace std;
 
@@ -74,7 +75,7 @@ void CkcSolver::computeScore(int r) {
 
 void CkcSolver::updateScore(pair<int, vector<int>> &ca, int r) {
 
-    for (int v : ca.second) {
+    for (int v: ca.second) {
         for (int j = 0; j < n; j++) {
             if (v != j && G[v][j] <= r) {
                 scores[j]--;
@@ -154,74 +155,136 @@ void CkcSolver::assignMissingVertices(vector<int> &C, vector<vector<int>> &A) {
             A[idxC].push_back(j);
         }
     }
-
-//    for (int j = 0; j < n; j++) {
-//        if (!assigned[j]) {
-//            if (C.size() < k) {
-//                C.push_back(j);   //convert j to center
-//                A.emplace_back();
-//            } else {
-//                int minDist = numeric_limits<int>::max();
-//                int closestC = -1;
-//                int idxC = -1;
-//                for (int i = 0; i < C.size(); ++i) {
-//                    int c = C[i];
-//                    if (capacities[c] > 0 && G[c][j] < minDist) {
-//                        minDist = G[c][j];
-//                        closestC = c;
-//                        idxC = i;
-//                    }
-//                }
-//                capacities[closestC]--;
-//                unassignedCount--;
-//                assigned[j] = true;
-//                A[idxC].push_back(j);
-//            }
-//        }
-//    }
 }
 
 pair<int, vector<int>> CkcSolver::distanceBasedSelection(vector<int> &NgL, int r) {
 
     pair<int, vector<int>> ca;
-    int d = numeric_limits<int>::max();
+//    if (NgL.size() >= mpi_size * 2) {
+    if (true) {
+        int batch_size = NgL.size() / mpi_size;
+        int mpi_mod = NgL.size() % mpi_size;
+        int mpi_low_idx = mpi_rank * batch_size + (mpi_rank <= mpi_mod ? mpi_rank : mpi_mod);
+        int mpi_high_idx = mpi_low_idx + batch_size + (mpi_rank < mpi_mod ? 1 : 0);
 
-    for (int v : NgL) {
+        int d = numeric_limits<int>::max();
+        for (int i = mpi_low_idx; i < mpi_high_idx; ++i) {
+            int v = NgL[i];
+            // get f_ref vertex
+            int fref = 0;
+            int maxDist = -1;
+            for (int j = 0; j < n; j++) {
 
-        // get f_ref vertex
-        int fref = 0;
-        int maxDist = -1;
-        for (int j = 0; j < n; j++) {
-
-            int dist = min(distances[j], G[j][v]);
-            if (maxDist < dist) {
-                maxDist = dist;
-                fref = j;
-            }
-        }
-
-        // get unassigned neighbors of v
-        vector<int> vertices(L);
-        int dv = 0;
-        int iu = 0;
-        for (int u : refMatrix[fref]) {
-            // 1st: avoid v to be assigned to itself
-            // 2nd: Pruned graph
-            // 3rd: u is not assigned
-            if (u != v && G[v][u] <= r && !assigned[u]) {
-                if (iu == L) {
-                    dv = G[fref][u];
-                    break;
+                int dist = min(distances[j], G[j][v]);
+                if (maxDist < dist) {
+                    maxDist = dist;
+                    fref = j;
                 }
-                vertices[iu] = u;
-                iu++;
+            }
+
+            // get unassigned neighbors of v
+            vector<int> vertices(L);
+            int dv = 0;
+            int iu = 0;
+            for (int u : refMatrix[fref]) {
+                // 1st: avoid v to be assigned to itself
+                // 2nd: Pruned graph
+                // 3rd: u is not assigned
+                if (u != v && G[v][u] <= r && !assigned[u]) {
+                    if (iu == L) {
+                        dv = G[fref][u];
+                        break;
+                    }
+                    vertices[iu] = u;
+                    iu++;
+                }
+            }
+
+            if (dv < d) {
+                d = dv;
+                ca.first = v;
+                ca.second = vertices;
+            }
+        }
+        if (d != numeric_limits<int>::max()) {
+            ca.second.push_back(d);
+            ca.second.push_back(ca.first);
+        }
+        int process_used = mpi_size <= NgL.size() ? mpi_size : mpi_mod;
+        int recvcounts[mpi_size];
+        int displs[mpi_size];
+
+        int mpi_recvcount = L + 2;
+        for (int i = 0; i < mpi_size; ++i) {
+            if (i < process_used) {
+                recvcounts[i] = L + 2;
+                displs[i] = i * (L + 2);
+            } else {
+                recvcounts[i] = 0;
+                displs[i] = 0;
             }
         }
 
-        if (dv < d) {
-            d = dv;
-            ca.first = v;
-            ca.second = vertices;
+        int all_data[process_used * mpi_recvcount];
+        MPI_Allgatherv(ca.second.data(), ca.second.size(), MPI_INT, all_data, recvcounts, displs, MPI_INT,
+                       MPI_COMM_WORLD);
+
+        vector<int> vertices;
+        int prevD = numeric_limits<int>::max();
+        int v;
+        int posV = -1;
+        for (int i = L + 1; i < process_used * mpi_recvcount; i += (L + 2)) {
+            if (all_data[i - 1] < prevD) {
+                prevD = all_data[i - 1];
+                v = all_data[i];
+                posV = i;
+            }
+        }
+        for (int i = posV - L - 1; i < posV - 1; ++i) {
+            vertices.push_back(all_data[i]);
+        }
+        ca.first = v;
+        ca.second = vertices;
+
+    } else {
+        int d = numeric_limits<int>::max();
+        for (int v : NgL) {
+
+            // get f_ref vertex
+            int fref = 0;
+            int maxDist = -1;
+            for (int j = 0; j < n; j++) {
+
+                int dist = min(distances[j], G[j][v]);
+                if (maxDist < dist) {
+                    maxDist = dist;
+                    fref = j;
+                }
+            }
+
+            // get unassigned neighbors of v
+            vector<int> vertices(L);
+            int dv = 0;
+            int iu = 0;
+            for (int u : refMatrix[fref]) {
+                // 1st: avoid v to be assigned to itself
+                // 2nd: Pruned graph
+                // 3rd: u is not assigned
+                if (u != v && G[v][u] <= r && !assigned[u]) {
+                    if (iu == L) {
+                        dv = G[fref][u];
+                        break;
+                    }
+                    vertices[iu] = u;
+                    iu++;
+                }
+            }
+
+            if (dv < d) {
+                d = dv;
+                ca.first = v;
+                ca.second = vertices;
+            }
         }
     }
     return ca;
@@ -231,7 +294,7 @@ int CkcSolver::getRadio(pair<vector<int>, vector<vector<int>>> &A) {
     int maxDist = -1;
     for (int idxC = 0; idxC < A.first.size(); ++idxC) {
         int c = A.first[idxC];
-        for (int i : A.second[idxC]) {
+        for (int i: A.second[idxC]) {
             if (G[i][c] > maxDist)
                 maxDist = G[i][c];
         }
@@ -307,7 +370,7 @@ pair<vector<int>, vector<vector<int>>> CkcSolver::getFeasibleSolution(int r, int
         assigned[ca.first] = true; //center is checked as assigned to avoid to be considered in future
 
         // vertices covered by center are checked as assigned
-        for (int v : ca.second) {
+        for (int v: ca.second) {
             assigned[v] = true;
         }
 
@@ -365,31 +428,76 @@ tuple<pair<vector<int>, vector<vector<int>>>, int> CkcSolver::solve() {
     return make_tuple(CA, real_r);
 }
 
+//int CkcSolver::addMissingCenters(pair<vector<int>, vector<vector<int>>> &CA, int r) {
+//
+//    int q = k - CA.first.size();
+//    vector<vector<int>> dV2C;
+//    dV2C.reserve(n - k);
+//    for (int idxC = 0; idxC < CA.first.size(); ++idxC) {
+//        int c = CA.first[idxC];
+//        for (int i: CA.second[idxC]) {
+//            // idxCenter; vertex; distance(vertex, center);
+//            dV2C.push_back({idxC, i, G[c][i]});
+//        }
+//    }
+//
+//    sort(dV2C.begin(), dV2C.end(),
+//         [](auto &v1, auto &v2) { return v1[2] > v2[2]; });
+//    r = dV2C[q][2];
+//    for (int i = 0; i < q; ++i) {
+//        int v = dV2C[i][1];
+//        int idxC = dV2C[i][0];
+//        CA.first.push_back(v);   //convert v to center
+//        CA.second.emplace_back();
+//
+//        // remove assignment of v
+//        CA.second[idxC].erase(remove(CA.second[idxC].begin(), CA.second[idxC].end(), v), CA.second[idxC].end());
+//    }
+//    return r;
+//}
+
+typedef tuple<int, int, int> pi;
+
+class PQI : public priority_queue<pi, vector<pi>, greater<pi> > {
+public:
+    vector<pi> &impl() { return c; }
+};
+
 int CkcSolver::addMissingCenters(pair<vector<int>, vector<vector<int>>> &CA, int r) {
 
+    PQI pq;
     int q = k - CA.first.size();
-    vector<vector<int>> dV2C;
-    dV2C.reserve(n - k);
+
     for (int idxC = 0; idxC < CA.first.size(); ++idxC) {
         int c = CA.first[idxC];
-        for (int i : CA.second[idxC]) {
-            // idxCenter; vertex; distance(vertex, center);
-            dV2C.push_back({idxC, i, G[c][i]});
+        int idx = 0;
+        for (int i: CA.second[idxC]) {
+
+            if (pq.size() < q) {
+                pq.push(make_tuple(G[c][i], idx, idxC));
+            } else {
+                int tmp_d, tmp_idx, tmp_idxC;
+                tie(tmp_d, tmp_idx, tmp_idxC) = pq.top();
+
+                if (tmp_d < G[c][i]) {
+                    pq.pop();
+                    pq.push(make_tuple(G[c][i], idx, idxC));
+                }
+            }
+            idx++;
         }
     }
 
-    sort(dV2C.begin(), dV2C.end(),
-         [](auto &v1, auto &v2) { return v1[2] > v2[2]; });
-    r = dV2C[q][2];
-    for (int i = 0; i < q; ++i) {
-        int v = dV2C[i][1];
-        int idxC = dV2C[i][0];
-        CA.first.push_back(v);   //convert v to center
+    for (auto it = pq.impl().begin(); it != pq.impl().end(); ++it) {
+        int tmp_d, tmp_idx, tmp_idxC;
+        tie(tmp_d, tmp_idx, tmp_idxC) = *it;
+
+        CA.first.push_back(CA.second[tmp_idxC][tmp_idx]);   //convert v to center
         CA.second.emplace_back();
 
         // remove assignment of v
-        CA.second[idxC].erase(remove(CA.second[idxC].begin(), CA.second[idxC].end(), v), CA.second[idxC].end());
-
+        CA.second[tmp_idxC][tmp_idx] = CA.second[tmp_idxC].back();
+        CA.second[tmp_idxC].pop_back();
     }
     return r;
 }
@@ -409,18 +517,21 @@ int CkcSolver::alternate_heuristic(pair<vector<int>, vector<vector<int>>> &CA) {
     for (int idxC = 0; idxC < CA.first.size(); ++idxC) {
         int c = CA.first[idxC];
         int new_c = c;
+        int idx_new_c = -1;
         int min_distance = farthest_distance(c, c, CA.second[idxC]);
-        for (int i : CA.second[idxC]) {
+        int idx = 0;
+        for (int i: CA.second[idxC]) {
             int tmp_distance = farthest_distance(c, i, CA.second[idxC]);
             if (tmp_distance < min_distance) {
                 new_c = i;
                 min_distance = tmp_distance;
+                idx_new_c = idx;
             }
+            idx++;
         }
         if (c != new_c) {
-            CA.second[idxC].erase(remove(CA.second[idxC].begin(), CA.second[idxC].end(), new_c), CA.second[idxC].end());
-            CA.second[idxC].push_back(c);
             CA.first[idxC] = new_c;
+            CA.second[idxC][idx_new_c] = c;
         }
         if (max_r < min_distance) max_r = min_distance;
     }
