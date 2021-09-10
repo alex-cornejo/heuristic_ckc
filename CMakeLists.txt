@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 2.8.12.2)
 project(heuristic_ckc)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 11)
+
+
+SET(CMAKE_CXX_FLAGS "-std=c++11")
 
 #SET(CMAKE_C_FLAGS_DEBUG "-D_DEBUG")
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
