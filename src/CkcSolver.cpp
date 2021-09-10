@@ -106,7 +106,7 @@ void CkcSolver::loadRefMatrix() {
             vertexReferences[ir] = {j, G[i][j]};
         }
         sort(vertexReferences.begin(), vertexReferences.end(),
-             [](vector<int> &v1, vector<int> &v2) { return v1[1] > v2[1]; });
+             [](vector<int> v1, vector<int> v2) { return v1[1] > v2[1]; });
         vector<int> references(n);
         for (int j = 0; j < n; j++) {
             references[j] = (int) vertexReferences[j][0];
