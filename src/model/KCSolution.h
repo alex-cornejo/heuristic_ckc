@@ -9,7 +9,7 @@
 #include "string"
 #include "list"
 #include "Center.h"
-#include "nlohmann/json.hpp"
+#include "../../nlohmann/json.hpp"
 
 class KCSolution {
 private:
