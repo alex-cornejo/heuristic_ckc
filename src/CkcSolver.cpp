@@ -106,7 +106,7 @@ void CkcSolver::loadRefMatrix() {
             vertexReferences[ir] = {j, G[i][j]};
         }
         sort(vertexReferences.begin(), vertexReferences.end(),
-             [](vector<int> v1, vector<int> v2) { return v1[1] > v2[1]; });
+             [](const vector<int> &v1, const vector<int> &v2) { return v1[1] > v2[1]; });
         vector<int> references(n);
         for (int j = 0; j < n; j++) {
             references[j] = (int) vertexReferences[j][0];
@@ -186,7 +186,7 @@ pair<int, vector<int>> CkcSolver::distanceBasedSelection(vector<int> &NgL, int r
             vector<int> vertices(L);
             int dv = 0;
             int iu = 0;
-            for (int u : refMatrix[fref]) {
+            for (int u: refMatrix[fref]) {
                 // 1st: avoid v to be assigned to itself
                 // 2nd: Pruned graph
                 // 3rd: u is not assigned
@@ -248,7 +248,7 @@ pair<int, vector<int>> CkcSolver::distanceBasedSelection(vector<int> &NgL, int r
 
     } else {
         int d = numeric_limits<int>::max();
-        for (int v : NgL) {
+        for (int v: NgL) {
 
             // get f_ref vertex
             int fref = 0;
@@ -266,7 +266,7 @@ pair<int, vector<int>> CkcSolver::distanceBasedSelection(vector<int> &NgL, int r
             vector<int> vertices(L);
             int dv = 0;
             int iu = 0;
-            for (int u : refMatrix[fref]) {
+            for (int u: refMatrix[fref]) {
                 // 1st: avoid v to be assigned to itself
                 // 2nd: Pruned graph
                 // 3rd: u is not assigned
