@@ -102,29 +102,45 @@ void CkcSolver::computeScore(int r) {
 void CkcSolver::updateScore(pair<int, vector<int>> &ca, int r) {
     // start time
     clock_t begin = clock();
-//    if (ca.second.size() >= mpi_size * 2) {
+
     if (true) {
-        int batch_size = ca.second.size() / mpi_size;
-        int mpi_mod = ca.second.size() % mpi_size;
+        int batch_size = n / mpi_size;
+        int mpi_mod = n % mpi_size;
         int mpi_low_idx = mpi_rank * batch_size + (mpi_rank <= mpi_mod ? mpi_rank : mpi_mod);
         int mpi_high_idx = mpi_low_idx + batch_size + (mpi_rank < mpi_mod ? 1 : 0);
 
-        vector<int> score_subtraction(n);
-        for (int i = mpi_low_idx; i < mpi_high_idx; ++i) {
-            int v = ca.second[i];
-            for (int j = 0; j < n; j++) {
+        vector<int> score_subtraction(mpi_high_idx - mpi_low_idx);
+        for (int v: ca.second) {
+            for (int j = mpi_low_idx; j < mpi_high_idx; j++) {
                 if (v != j && G[v][j] <= r) {
-                    score_subtraction[j]--;
+                    score_subtraction[j - mpi_low_idx]--;
                 }
             }
         }
-        int recvcunt = mpi_size * n;
+
+        int recvcunt = n;
         int all_data[recvcunt];
-        MPI_Allgather(score_subtraction.data(), score_subtraction.size(), MPI_INT, all_data, n, MPI_INT,
-                      MPI_COMM_WORLD);
-        for (int i = 0; i < recvcunt; ++i) {
-            scores[i % n] += all_data[i];
+        int recvcounts[mpi_size];
+        int displs[mpi_size];
+
+        for (int tmp_rank = 0; tmp_rank < mpi_size; ++tmp_rank) {
+            int tmp_low_idx = tmp_rank * batch_size + (tmp_rank <= mpi_mod ? tmp_rank : mpi_mod);
+            int tmp_high_idx = tmp_low_idx + batch_size + (tmp_rank < mpi_mod ? 1 : 0);
+            recvcounts[tmp_rank] = (tmp_high_idx - tmp_low_idx);
+            displs[tmp_rank] = tmp_rank == 0 ? 0 : (displs[tmp_rank - 1] + recvcounts[tmp_rank - 1]);
         }
+
+        MPI_Allgatherv(score_subtraction.data(), score_subtraction.size(), MPI_INT, all_data, recvcounts, displs,
+                       MPI_INT,
+                       MPI_COMM_WORLD);
+
+        int v = ca.first;
+        for (int i = 0; i < recvcunt; ++i) {
+            // 1st: if i is neighbor of v, then it must be subtracted
+            // 2nd: only subtraction of clients is performed
+            scores[i] += (v != i && G[v][i] <= r ? all_data[i] - 1 : all_data[i]);
+        }
+
     } else {
         for (int v: ca.second) {
             for (int j = 0; j < n; j++) {
@@ -133,12 +149,11 @@ void CkcSolver::updateScore(pair<int, vector<int>> &ca, int r) {
                 }
             }
         }
-    }
-
-    int v = ca.first;
-    for (int j = 0; j < n; j++) {
-        if (v != j && G[v][j] <= r)
-            scores[j]--;
+        int v = ca.first;
+        for (int j = 0; j < n; j++) {
+            if (v != j && G[v][j] <= r)
+                scores[j]--;
+        }
     }
 
     clock_t end = clock();
