@@ -78,25 +78,72 @@ void CkcSolver::computeScore(int r) {
     }
 }
 
+//void CkcSolver::updateScore(pair<int, vector<int>> &ca, int r) {
+////    // start time
+////    clock_t begin = clock();
+//    for (int v: ca.second) {
+//        for (int j = 0; j < n; j++) {
+//            if (v != j && G[v][j] <= r) {
+//                scores[j]--;
+//            }
+//        }
+//    }
+//    int v = ca.first;
+//    for (int j = 0; j < n; j++) {
+//        if (v != j && G[v][j] <= r)
+//            scores[j]--;
+//    }
+//
+////    clock_t end = clock();
+////    double time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
+////    timeDBS += time_spent;
+//}
+
 void CkcSolver::updateScore(pair<int, vector<int>> &ca, int r) {
-//    // start time
-//    clock_t begin = clock();
-    for (int v: ca.second) {
-        for (int j = 0; j < n; j++) {
-            if (v != j && G[v][j] <= r) {
-                scores[j]--;
+    // start time
+    clock_t begin = clock();
+//    if (ca.second.size() >= mpi_size * 2) {
+    if (true) {
+        int batch_size = ca.second.size() / mpi_size;
+        int mpi_mod = ca.second.size() % mpi_size;
+        int mpi_low_idx = mpi_rank * batch_size + (mpi_rank <= mpi_mod ? mpi_rank : mpi_mod);
+        int mpi_high_idx = mpi_low_idx + batch_size + (mpi_rank < mpi_mod ? 1 : 0);
+
+        vector<int> score_subtraction(n);
+        for (int i = mpi_low_idx; i < mpi_high_idx; ++i) {
+            int v = ca.second[i];
+            for (int j = 0; j < n; j++) {
+                if (v != j && G[v][j] <= r) {
+                    score_subtraction[j]--;
+                }
+            }
+        }
+        int recvcunt = mpi_size * n;
+        int all_data[recvcunt];
+        MPI_Allgather(score_subtraction.data(), score_subtraction.size(), MPI_INT, all_data, n, MPI_INT,
+                      MPI_COMM_WORLD);
+        for (int i = 0; i < recvcunt; ++i) {
+            scores[i % n] += all_data[i];
+        }
+    } else {
+        for (int v: ca.second) {
+            for (int j = 0; j < n; j++) {
+                if (v != j && G[v][j] <= r) {
+                    scores[j]--;
+                }
             }
         }
     }
+
     int v = ca.first;
     for (int j = 0; j < n; j++) {
         if (v != j && G[v][j] <= r)
             scores[j]--;
     }
 
-//    clock_t end = clock();
-//    double time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
-//    timeDBS += time_spent;
+    clock_t end = clock();
+    double time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
+    timeDBS += time_spent;
 }
 
 void CkcSolver::updateDistances(int c) {
