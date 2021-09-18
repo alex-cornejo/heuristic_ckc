@@ -47,7 +47,7 @@ void validateSolution(KCSolution &kcSolution, int n, int L) {
 }
 
 void execute(string &instancePath, int n, int k, int L,
-             int maxIter, int numRepetitions, bool printable, string &instanceFormat) {
+             int indRep, int rep, bool printable, string &instanceFormat) {
 
     vector<vector<int>> G;
     if (instanceFormat == "tsplib") {
@@ -59,23 +59,24 @@ void execute(string &instancePath, int n, int k, int L,
         return;
     }
 
-    float solutionSizeSum = 0;
-    float totalTime = 0;
+    int solutionSizeSum = 0;
+    double totalTime = 0;
+    double totalTimeParallelSec = 0;
 
-    vector<float> solutionSizeArr(maxIter);
-    CkcSolver solver(k, L, G, numRepetitions);
+    vector<int> solutionSizeArr(indRep);
+    CkcSolver solver(k, L, G, rep);
     solver.mpi_rank = mpi_rank;
     solver.mpi_size = mpi_size;
 
     pair<vector<int>, vector<vector<int>>> bestAssignment;
-    float bestFitness = +INFINITY;
-    for (int i = 0; i < maxIter; i++) {
+    int bestFitness = INT_MAX;
+    for (int i = 0; i < indRep; i++) {
 
         // start time
         clock_t begin = clock();
 
         pair<vector<int>, vector<vector<int>>> A;
-        float solutionSizeTmp;
+        int solutionSizeTmp;
         tie(A, solutionSizeTmp) = solver.solve();
 
         // finish time
@@ -83,6 +84,7 @@ void execute(string &instancePath, int n, int k, int L,
         double time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
 
         totalTime += time_spent;
+        totalTimeParallelSec += solver.getTimeDBS();
         solutionSizeSum += solutionSizeTmp;
         solutionSizeArr[i] = solutionSizeTmp;
 
@@ -90,12 +92,13 @@ void execute(string &instancePath, int n, int k, int L,
             bestFitness = solutionSizeTmp;
             bestAssignment = A;
         }
+        solver.resetParallelMeasure();
     }
 
     if (mpi_rank == 0) {
-        auto average = solutionSizeSum / maxIter;
+        float average = solutionSizeSum / (float) indRep;
         cout << bestFitness << "," << average << "," << Utils::stdDev(solutionSizeArr, average) << ","
-             << (totalTime / maxIter) << endl;
+             << (totalTime / indRep) << "," << (totalTimeParallelSec/indRep) << "," << solver.averageCardClosedN() << endl;
 
         KCSolution kcSolution = toKCModel(bestAssignment);
         kcSolution.setInstance(instancePath);

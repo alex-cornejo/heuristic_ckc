@@ -140,7 +140,7 @@ void Utils::floydWarshall(std::vector<std::vector<float>> &G) {
     }
 }
 
-float Utils::stdDev(std::vector<float> &items, float average) {
+float Utils::stdDev(std::vector<int> &items, float average) {
     float std = 0;
     for (float item : items) {
         std += pow(item - average, 2);
