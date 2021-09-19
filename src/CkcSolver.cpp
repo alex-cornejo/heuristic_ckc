@@ -150,6 +150,7 @@ void CkcSolver::updateScore(pair<int, vector<int>> &ca, int r) {
 
         vector<int> score_subtraction(mpi_high_idx - mpi_low_idx);
         for (int v: ca.second) {
+            assigned[v] = true; // vertices covered by center are checked as assigned
             for (int j = mpi_low_idx; j < mpi_high_idx; j++) {
                 if (v != j && G[v][j] <= r) {
                     score_subtraction[j - mpi_low_idx]--;
@@ -182,6 +183,7 @@ void CkcSolver::updateScore(pair<int, vector<int>> &ca, int r) {
 
     } else {
         for (int v: ca.second) {
+            assigned[v] = true; // vertices covered by center are checked as assigned
             for (int j = 0; j < n; j++) {
                 if (v != j && G[v][j] <= r) {
                     scores[j]--;
@@ -439,35 +441,33 @@ pair<vector<int>, vector<vector<int>>> CkcSolver::getFeasibleSolution(int r, int
         int f = getFVertex(idxK, iter);
 
         // get N(f)U{f} with score > L ... candidates to become centers
+        // if not vertex with score > L is found, the algorithm continues
+        // by processing vertex with biggest score
         vector<int> NgL;
         NgL.reserve(unassignedCount);
+        int maxScore = -1;
+        int vMaxScore = -1;
         for (int v = 0; v < n; ++v) {
             // 1st: v is not assigned
             // 2nd: Pruned graph
-            // 3rd: Score > L
-            if (!assigned[v] && G[f][v] <= r && scores[v] > L) {
-                NgL.push_back(v);
+            if (!assigned[v] && G[f][v] <= r) {
+                // looking for vertices with Score > L
+                if (scores[v] > L) {
+                    NgL.push_back(v);
+                }
+                // looking for vertex with max Score
+                if (maxScore < scores[v]) {
+                    maxScore = scores[v];
+                    vMaxScore = v;
+                }
             }
         }
 
         if (!NgL.empty()) {
             ca = distanceBasedSelection(NgL, r);
         } else {
-            int maxScore = -1;
-            int vMaxScore = -1;
             // first center is taken randomly
-            if (idxK > 0) {
-                for (int j = 0; j < n; j++) {
-                    // 1st: j is not assigned
-                    // 2nd: Pruned graph
-                    if (!assigned[j] && G[f][j] <= r) {
-                        if (maxScore < scores[j]) {
-                            maxScore = scores[j];
-                            vMaxScore = j;
-                        }
-                    }
-                }
-            } else {
+            if (idxK == 0) {
                 vMaxScore = f;
                 maxScore = scores[f];
             }
@@ -486,12 +486,9 @@ pair<vector<int>, vector<vector<int>>> CkcSolver::getFeasibleSolution(int r, int
             ca.second = vertices;
         }
 
-        assigned[ca.first] = true; //center is checked as assigned to avoid to be considered in future
-
-        // vertices covered by center are checked as assigned
-        for (int v: ca.second) {
-            assigned[v] = true;
-        }
+        //center is checked as assigned to avoid to be considered in future
+        // vertices covered by center are checked as assigned in the updateScore function
+        assigned[ca.first] = true;
 
         capacities[ca.first] -= ca.second.size(); // capacity of center idxK-th is reduced
         unassignedCount -= ca.second.size() + 1; // +1 center is not considered
