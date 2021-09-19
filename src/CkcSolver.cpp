@@ -65,17 +65,62 @@ void CkcSolver::loadEdges() {
     sort(w.begin(), w.end());
 }
 
+//void CkcSolver::computeScore(int r) {
+//
+//    //reset scores
+//    fill(scores.begin(), scores.end(), 0);
+//
+//    // start time
+//    clock_t begin = clock();
+//
+//    for (int i = 0; i < n; i++) {
+//        for (int j = 0; j < n; j++) {
+//            if (i != j && G[i][j] <= r)
+//                scores[i]++;
+//        }
+//    }
+//
+//    clock_t end = clock();
+//    double time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
+//    timeDBS += time_spent;
+//}
+
 void CkcSolver::computeScore(int r) {
 
-    //reset scores
-    fill(scores.begin(), scores.end(), 0);
+    // start time
+    clock_t begin = clock();
 
-    for (int i = 0; i < n; i++) {
+    int batch_size = n / mpi_size;
+    int mpi_mod = n % mpi_size;
+    int mpi_low_idx = mpi_rank * batch_size + (mpi_rank <= mpi_mod ? mpi_rank : mpi_mod);
+    int mpi_high_idx = mpi_low_idx + batch_size + (mpi_rank < mpi_mod ? 1 : 0);
+
+    vector<int> score_rank(mpi_high_idx - mpi_low_idx);
+
+    for (int i = mpi_low_idx; i < mpi_high_idx; i++) {
         for (int j = 0; j < n; j++) {
             if (i != j && G[i][j] <= r)
-                scores[i]++;
+                score_rank[i - mpi_low_idx]++;
         }
     }
+
+    int recvcounts[mpi_size];
+    int displs[mpi_size];
+
+    for (int tmp_rank = 0; tmp_rank < mpi_size; ++tmp_rank) {
+        int tmp_low_idx = tmp_rank * batch_size + (tmp_rank <= mpi_mod ? tmp_rank : mpi_mod);
+        int tmp_high_idx = tmp_low_idx + batch_size + (tmp_rank < mpi_mod ? 1 : 0);
+        recvcounts[tmp_rank] = (tmp_high_idx - tmp_low_idx);
+        displs[tmp_rank] = tmp_rank == 0 ? 0 : (displs[tmp_rank - 1] + recvcounts[tmp_rank - 1]);
+    }
+
+    MPI_Allgatherv(score_rank.data(), score_rank.size(), MPI_INT, scores.data(), recvcounts, displs,
+                   MPI_INT,
+                   MPI_COMM_WORLD);
+
+    clock_t end = clock();
+    double time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
+    timeDBS += time_spent;
 }
 
 //void CkcSolver::updateScore(pair<int, vector<int>> &ca, int r) {
@@ -234,8 +279,8 @@ pair<int, vector<int>> CkcSolver::distanceBasedSelection(vector<int> &NgL, int r
     callsDBSCount += 1;
     sumClosedN += NgL.size();
 
-//    // start time
-//    clock_t begin = clock();
+    // start time
+    clock_t begin = clock();
 
     pair<int, vector<int>> ca;
 //    if (NgL.size() >= mpi_size * 2) {
@@ -307,6 +352,7 @@ pair<int, vector<int>> CkcSolver::distanceBasedSelection(vector<int> &NgL, int r
                        MPI_COMM_WORLD);
 
         vector<int> vertices;
+        vertices.reserve(L);
         int prevD = numeric_limits<int>::max();
         int v;
         int posV = -1;
@@ -364,9 +410,9 @@ pair<int, vector<int>> CkcSolver::distanceBasedSelection(vector<int> &NgL, int r
             }
         }
     }
-//    clock_t end = clock();
-//    double time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
-//    timeDBS += time_spent;
+    clock_t end = clock();
+    double time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
+    timeDBS += time_spent;
     return ca;
 }
 
@@ -398,7 +444,7 @@ pair<vector<int>, vector<vector<int>>> CkcSolver::getFeasibleSolution(int r, int
 
         // get N(f)U{f} with score > L ... candidates to become centers
         vector<int> NgL;
-        NgL.reserve(n);
+        NgL.reserve(unassignedCount);
         for (int v = 0; v < n; ++v) {
             // 1st: v is not assigned
             // 2nd: Pruned graph
