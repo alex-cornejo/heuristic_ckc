@@ -30,7 +30,7 @@ public class RunExperimentsPHCores
         int indRep = 30;
         int rep = 1;
         boolean printable = false;
-        final String solverPath = "mpirun -np " + np + " "+ ONEHOP_SOLVER;
+        final String solverPath = "mpirun -np " + np + " " + ONEHOP_SOLVER;
         String cmd = String.format("%s %s %d %d %d %d %d %b tsplib", solverPath, instancePath, n, k, L, indRep, rep, printable);
         List<String> lines = executeCmd(cmd);
         String[] firstRowArr = lines.get(0).split(",");
@@ -38,6 +38,8 @@ public class RunExperimentsPHCores
         double avgFitness = Double.parseDouble(firstRowArr[1]);
         double stdDev = Double.parseDouble(firstRowArr[2]);
         double time = Double.parseDouble(firstRowArr[3]);
+        double timeParallelSec = Double.parseDouble(firstRowArr[4]);
+        int card = Integer.parseInt(firstRowArr[5]);
 
         if (printable) {
             StringBuilder jsonSol = new StringBuilder();
@@ -54,7 +56,7 @@ public class RunExperimentsPHCores
             }
         }
 
-        return new double[]{fitnessCVKP, avgFitness, stdDev,time};
+        return new double[]{fitnessCVKP, avgFitness, stdDev, time, timeParallelSec, card};
     }
 
     public static void main(String[] args) throws IOException, InterruptedException
@@ -75,8 +77,8 @@ public class RunExperimentsPHCores
                 int prevL = -1;
                 for (double margin : margins) {
                     int L = (int) Math.ceil((float) n / k);
-                    L = (int) Math.ceil((float) (L * (1 + margin)));
                     L--;
+                    L = (int) Math.ceil((float) (L * (1 + margin)));
                     if (prevL != L) {
 
                         for (int i = 1; i <= numberOfInstances; i++) {
@@ -96,7 +98,9 @@ public class RunExperimentsPHCores
                                 double avgFitness = objValuesOneHop[1];
                                 double stdDev = objValuesOneHop[2];
                                 double time = objValuesOneHop[3];
-                                line.append(String.format(",%d,%f,%f", objCvkpOH, avgFitness,time));
+                                double timeParallelSec = objValuesOneHop[4];
+                                int card = (int) objValuesOneHop[5];
+                                line.append(String.format(",%d,%f,%f,%f,%d", objCvkpOH, avgFitness, time, timeParallelSec, card));
                             }
                             System.out.println(line);
                             outputWriter.write(String.format("%s\n", line));
