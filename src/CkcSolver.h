@@ -22,7 +22,6 @@ private:
     std::vector<int> w;
     std::vector<int> scores;
     std::vector<bool> assigned;
-    std::vector<bool> centers;
     int rep;
     std::vector<int> capacities;
     int unassignedCount; // tracks the amount of unassigned vertices

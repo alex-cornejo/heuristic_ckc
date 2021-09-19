@@ -19,9 +19,6 @@ CkcSolver::CkcSolver(int k, int L, const vector<vector<int>> &G, int rep) :
     //init assigned vertices
     assigned.resize(n);
 
-    //init assigned centers
-    centers.resize(n);
-
     //init capacities
     capacities.resize(n);
 
@@ -44,9 +41,6 @@ void CkcSolver::reset() {
 
     //reset assigned vertices
     fill(assigned.begin(), assigned.end(), false);
-
-    //reset assigned centers
-    fill(centers.begin(), centers.end(), false);
 
     //reset capacities
     fill(capacities.begin(), capacities.end(), L);
@@ -305,7 +299,9 @@ pair<int, vector<int>> CkcSolver::distanceBasedSelection(vector<int> &NgL, int r
             }
 
             // get unassigned neighbors of v
-            vector<int> vertices(L);
+            vector<int> vertices;
+            vertices.reserve(L + 2);
+            vertices.resize(L);
             int dv = 0;
             int iu = 0;
             for (int u: refMatrix[fref]) {
@@ -449,8 +445,7 @@ pair<vector<int>, vector<vector<int>>> CkcSolver::getFeasibleSolution(int r, int
             // 1st: v is not assigned
             // 2nd: Pruned graph
             // 3rd: Score > L
-            // 4th: v is not a center
-            if (!assigned[v] && G[f][v] <= r && scores[v] > L && !centers[v]) {
+            if (!assigned[v] && G[f][v] <= r && scores[v] > L) {
                 NgL.push_back(v);
             }
         }
@@ -464,9 +459,8 @@ pair<vector<int>, vector<vector<int>>> CkcSolver::getFeasibleSolution(int r, int
             if (idxK > 0) {
                 for (int j = 0; j < n; j++) {
                     // 1st: j is not assigned
-                    // 2nd: j is not a center
-                    // 3rd: Pruned graph
-                    if (!assigned[j] && !centers[j] && G[f][j] <= r) {
+                    // 2nd: Pruned graph
+                    if (!assigned[j] && G[f][j] <= r) {
                         if (maxScore < scores[j]) {
                             maxScore = scores[j];
                             vMaxScore = j;
@@ -492,7 +486,6 @@ pair<vector<int>, vector<vector<int>>> CkcSolver::getFeasibleSolution(int r, int
             ca.second = vertices;
         }
 
-        centers[ca.first] = true; // center is checked as center
         assigned[ca.first] = true; //center is checked as assigned to avoid to be considered in future
 
         // vertices covered by center are checked as assigned
