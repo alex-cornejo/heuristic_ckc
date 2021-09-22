@@ -1,13 +1,19 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class RunExperimentsPHCores {
+public class RunExperimentsPHTSPLIB {
 
-    static final String tspFolderName = "tsplib";
-    static final int[] CORES_EXP = { 1, 2, 4, 8, 16, 32, 48, 64 };
+    static final int[] CORES_EXP = { 1, 2, 4, 8, 16, 32 };
     static final String ONEHOP_SOLVER = "./heuristic_ckc";
     static final String INSTANCES_PATH = "dataset";
+
+    static List<Object[]> set1 = Arrays.asList(new Object[] { "kroA100", 100 }, new Object[] { "kroB100", 100 },
+            new Object[] { "kroC100", 100 }, new Object[] { "eil101", 101 }, new Object[] { "lin105", 105 },
+            new Object[] { "pr107", 107 });
+    static List<Object[]> set2 = Arrays.asList(new Object[] { "kroA200", 200 }, new Object[] { "kroB200", 200 },
+            new Object[] { "ts225", 225 }, new Object[] { "pr226", 226 }, new Object[] { "a280", 280 });
 
     static List<String> executeCmd(String cmd) throws IOException, InterruptedException {
         Runtime run = Runtime.getRuntime();
@@ -60,35 +66,29 @@ public class RunExperimentsPHCores {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
+
         int[] K = { 5, 10, 20, 40 };
         double[] margins = { 0, 0.05, 0.1 };
         int numberOfInstances = 1;
-        int initSize = 1000;
-        int finalSize = 5000;
-        int offset = 1000;
-        final int sizeIdxInstance = 2;
-        final String prefix = "URDI";
 
         BufferedWriter outputWriter = new BufferedWriter(new FileWriter("output.csv"));
-        for (int n = initSize; n <= finalSize; n += offset) {
-
+        for (Object[] pair : set1) {
+            int n = (int) pair[1];
             for (int k : K) {
                 int prevL = -1;
                 for (double margin : margins) {
                     int L = (int) Math.ceil((float) (n - k) / k);
                     L = (int) Math.ceil((float) (L * (1 + margin)));
+
                     if (prevL != L) {
 
                         for (int i = 1; i <= numberOfInstances; i++) {
-                            StringBuilder idxInstance = new StringBuilder(Integer.toString(i));
-                            while (idxInstance.length() < sizeIdxInstance) {
-                                idxInstance.insert(0, 0);
-                            }
-                            String tspInstanceName = String.format("%s-%d-%s.tsp", prefix, n, idxInstance);
-                            String tspInstancePath = String.format("%s/%s/%s-%d/%s", INSTANCES_PATH, tspFolderName,
-                                    prefix, n, tspInstanceName);
 
-                            // System.out.printf("%s, %d, %d, %d\n", tspInstanceName, n, k , L);
+                            String tspInstanceName = String.format("%s.tsp", pair[0]);
+                            String tspInstancePath = String.format("%s/%s", INSTANCES_PATH,
+                                    tspInstanceName);
+
+                            // System.out.printf("%s, %d, %d, %d\n", tspInstanceName, n, k, L);
                             StringBuilder line = new StringBuilder();
                             for (int np : CORES_EXP) {
                                 double[] objValuesOneHop = executeOneHopExperiment(tspInstancePath, n, k, L, np);
