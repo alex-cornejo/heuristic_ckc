@@ -12,7 +12,7 @@ class Utils {
 public:
     static std::vector<std::vector<int>> loadGEucSpace(const std::string &file_path);
 
-    static std::vector<std::vector<int>> readVList(const std::string &file_path);
+    static std::vector<std::vector<float>> readVList(const std::string &file_path);
 
     static float stdDev(std::vector<int> &items, float average);
 
