@@ -14,6 +14,8 @@ public class RunExperimentsPHTSPLIB {
             new Object[] { "pr107", 107 });
     static List<Object[]> set2 = Arrays.asList(new Object[] { "kroA200", 200 }, new Object[] { "kroB200", 200 },
             new Object[] { "ts225", 225 }, new Object[] { "pr226", 226 }, new Object[] { "a280", 280 });
+    static List<Object[]> set3 = Arrays.asList(new Object[] { "rat195", 195 }, new Object[] { "d198", 198 },
+            new Object[] { "gr202", 202 }, new Object[] { "tsp225", 225 }, new Object[] { "gr229", 229 });
 
     static List<String> executeCmd(String cmd) throws IOException, InterruptedException {
         Runtime run = Runtime.getRuntime();
