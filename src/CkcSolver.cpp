@@ -289,14 +289,14 @@ pair<int, vector<int>> CkcSolver::distanceBasedSelection(vector<int> &NgL, int r
         int d = numeric_limits<int>::max();
         for (int i = mpi_low_idx; i < mpi_high_idx; ++i) {
             int v = NgL[i];
-            // get f_ref vertex
-            int fref = 0;
+            // get v_ref vertex
+            int vref = -1;
             int maxDist = -1;
             for (int j = 0; j < n; j++) {
                 int dist = min(distances[j], G[v][j]);
-                if (maxDist < dist) {
+                if (maxDist < dist && !assigned[j]) {
                     maxDist = dist;
-                    fref = j;
+                    vref = j;
                 }
             }
 
@@ -306,13 +306,13 @@ pair<int, vector<int>> CkcSolver::distanceBasedSelection(vector<int> &NgL, int r
             vertices.resize(L);
             int dv = 0;
             int iu = 0;
-            for (int u: refMatrix[fref]) {
+            for (int u: refMatrix[vref]) {
                 // 1st: avoid v to be assigned to itself
                 // 2nd: Pruned graph
                 // 3rd: u is not assigned
                 if (u != v && G[v][u] <= r && !assigned[u]) {
                     if (iu == L) {
-                        dv = G[fref][u];
+                        dv = G[vref][u];
                         break;
                     }
                     vertices[iu] = u;

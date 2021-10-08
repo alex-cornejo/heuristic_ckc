@@ -5,7 +5,7 @@ import java.util.List;
 public class RunExperimentsPHCores {
 
     static final String tspFolderName = "tsplib";
-    static final int[] CORES_EXP = { 1, 2, 4, 8, 16, 32, 48, 64 };
+    static final int[] CORES_EXP = { 1, 2, 4, 8, 16, 32 };
     static final String ONEHOP_SOLVER = "./heuristic_ckc";
     static final String INSTANCES_PATH = "dataset";
 

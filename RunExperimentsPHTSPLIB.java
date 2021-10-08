@@ -74,7 +74,7 @@ public class RunExperimentsPHTSPLIB {
         int numberOfInstances = 1;
 
         BufferedWriter outputWriter = new BufferedWriter(new FileWriter("output.csv"));
-        for (Object[] pair : set1) {
+        for (Object[] pair : set2) {
             int n = (int) pair[1];
             for (int k : K) {
                 int prevL = -1;
@@ -100,7 +100,7 @@ public class RunExperimentsPHTSPLIB {
                                 double time = objValuesOneHop[3];
                                 double timeParallelSec = objValuesOneHop[4];
                                 int card = (int) objValuesOneHop[5];
-                                line.append(String.format(",%d,%f,%f,%f,%d", objCvkpOH, avgFitness, time,
+                                line.append(String.format(",%d,%f,%f,%f,%f,%d", objCvkpOH, avgFitness, stdDev, time,
                                         timeParallelSec, card));
                             }
                             System.out.println(line);
