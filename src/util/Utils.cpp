@@ -25,9 +25,10 @@ vector<vector<int>> Utils::loadGEucSpace(const string &file_path) {
             auto v2 = vertices[j];
 
             // computing euclidean distance
-            vector<int> subtracted(v1.size());
+            vector<float> subtracted;
+            subtracted.reserve(v1.size());
             transform(v1.begin(), v1.end(), v2.begin(), back_inserter(subtracted),
-                           [](int a, int b) { return pow(a - b, 2); });
+                           [](float a, float b) { return pow(a - b, 2); });
             double d = sqrt(accumulate(subtracted.begin(), subtracted.end(), 0.0));
             D[j][i] = D[i][j] = (int)(d+0.5);
         }
@@ -35,9 +36,9 @@ vector<vector<int>> Utils::loadGEucSpace(const string &file_path) {
     return D;
 }
 
-std::vector<std::vector<int>> Utils::readVList(const std::string &file_path) {
+std::vector<std::vector<float>> Utils::readVList(const std::string &file_path) {
 
-    std::vector<std::vector<int>> vertices;
+    std::vector<std::vector<float>> vertices;
     std::string line;
     std::ifstream file(file_path);
 
@@ -55,7 +56,7 @@ std::vector<std::vector<int>> Utils::readVList(const std::string &file_path) {
             throw;
         }
 
-        std::vector<int> xy(2);
+        std::vector<float> xy(2);
         if (line_vec.size() == 1) {
             int n = stoi(line);
             vertices.reserve(n);
@@ -140,7 +141,7 @@ void Utils::floydWarshall(std::vector<std::vector<float>> &G) {
     }
 }
 
-float Utils::stdDev(std::vector<float> &items, float average) {
+float Utils::stdDev(std::vector<int> &items, float average) {
     float std = 0;
     for (float item : items) {
         std += pow(item - average, 2);

@@ -10,17 +10,14 @@
 
 using namespace std;
 
-CkcSolver::CkcSolver(int k, int L, const vector<vector<int>> &G, int numRepetitions) :
-        k(k), L(L), G(G), numRepetitions(numRepetitions) {
+CkcSolver::CkcSolver(int k, int L, const vector<vector<int>> &G, int rep) :
+        k(k), L(L), G(G), rep(rep) {
     n = G.size();
     loadEdges();
     loadRefMatrix();
 
     //init assigned vertices
     assigned.resize(n);
-
-    //init assigned centers
-    centers.resize(n);
 
     //init capacities
     capacities.resize(n);
@@ -31,6 +28,11 @@ CkcSolver::CkcSolver(int k, int L, const vector<vector<int>> &G, int numRepetiti
     //reset scores
     scores.resize(n);
 
+    // init parallel measures variables
+    timeDBS = 0;
+    callsDBSCount = 0;
+    sumClosedN = 0;
+
     reset();
 }
 
@@ -39,9 +41,6 @@ void CkcSolver::reset() {
 
     //reset assigned vertices
     fill(assigned.begin(), assigned.end(), false);
-
-    //reset assigned centers
-    fill(centers.begin(), centers.end(), false);
 
     //reset capacities
     fill(capacities.begin(), capacities.end(), L);
@@ -60,39 +59,153 @@ void CkcSolver::loadEdges() {
     sort(w.begin(), w.end());
 }
 
+//void CkcSolver::computeScore(int r) {
+//
+//    //reset scores
+//    fill(scores.begin(), scores.end(), 0);
+//
+//    // start time
+//    clock_t begin = clock();
+//
+//    for (int i = 0; i < n; i++) {
+//        for (int j = 0; j < n; j++) {
+//            if (i != j && G[i][j] <= r)
+//                scores[i]++;
+//        }
+//    }
+//
+//    clock_t end = clock();
+//    double time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
+//    timeDBS += time_spent;
+//}
+
 void CkcSolver::computeScore(int r) {
 
-    //reset scores
-    fill(scores.begin(), scores.end(), 0);
+    // start time
+    clock_t begin = clock();
 
-    for (int i = 0; i < n; i++) {
+    int batch_size = n / mpi_size;
+    int mpi_mod = n % mpi_size;
+    int mpi_low_idx = mpi_rank * batch_size + (mpi_rank <= mpi_mod ? mpi_rank : mpi_mod);
+    int mpi_high_idx = mpi_low_idx + batch_size + (mpi_rank < mpi_mod ? 1 : 0);
+
+    vector<int> score_rank(mpi_high_idx - mpi_low_idx);
+
+    for (int i = mpi_low_idx; i < mpi_high_idx; i++) {
         for (int j = 0; j < n; j++) {
             if (i != j && G[i][j] <= r)
-                scores[i]++;
+                score_rank[i - mpi_low_idx]++;
         }
     }
+
+    int recvcounts[mpi_size];
+    int displs[mpi_size];
+
+    for (int tmp_rank = 0; tmp_rank < mpi_size; ++tmp_rank) {
+        int tmp_low_idx = tmp_rank * batch_size + (tmp_rank <= mpi_mod ? tmp_rank : mpi_mod);
+        int tmp_high_idx = tmp_low_idx + batch_size + (tmp_rank < mpi_mod ? 1 : 0);
+        recvcounts[tmp_rank] = (tmp_high_idx - tmp_low_idx);
+        displs[tmp_rank] = tmp_rank == 0 ? 0 : (displs[tmp_rank - 1] + recvcounts[tmp_rank - 1]);
+    }
+
+    MPI_Allgatherv(score_rank.data(), score_rank.size(), MPI_INT, scores.data(), recvcounts, displs,
+                   MPI_INT,
+                   MPI_COMM_WORLD);
+
+    clock_t end = clock();
+    double time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
+    timeDBS += time_spent;
 }
 
-void CkcSolver::updateScore(pair<int, vector<int>> &ca, int r) {
+//void CkcSolver::updateScore(pair<int, vector<int>> &ca, int r) {
+////    // start time
+////    clock_t begin = clock();
+//    for (int v: ca.second) {
+//        for (int j = 0; j < n; j++) {
+//            if (v != j && G[v][j] <= r) {
+//                scores[j]--;
+//            }
+//        }
+//    }
+//    int v = ca.first;
+//    for (int j = 0; j < n; j++) {
+//        if (v != j && G[v][j] <= r)
+//            scores[j]--;
+//    }
+//
+////    clock_t end = clock();
+////    double time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
+////    timeDBS += time_spent;
+//}
 
-    for (int v: ca.second) {
-        for (int j = 0; j < n; j++) {
-            if (v != j && G[v][j] <= r) {
-                scores[j]--;
+void CkcSolver::updateScore(pair<int, vector<int>> &ca, int r) {
+    // start time
+    clock_t begin = clock();
+
+    if (true) {
+        int batch_size = n / mpi_size;
+        int mpi_mod = n % mpi_size;
+        int mpi_low_idx = mpi_rank * batch_size + (mpi_rank <= mpi_mod ? mpi_rank : mpi_mod);
+        int mpi_high_idx = mpi_low_idx + batch_size + (mpi_rank < mpi_mod ? 1 : 0);
+
+        vector<int> score_subtraction(mpi_high_idx - mpi_low_idx);
+        for (int v: ca.second) {
+            assigned[v] = true; // vertices covered by center are checked as assigned
+            for (int j = mpi_low_idx; j < mpi_high_idx; j++) {
+                if (v != j && G[v][j] <= r) {
+                    score_subtraction[j - mpi_low_idx]--;
+                }
             }
         }
+
+        int recvcunt = n;
+        int all_data[recvcunt];
+        int recvcounts[mpi_size];
+        int displs[mpi_size];
+
+        for (int tmp_rank = 0; tmp_rank < mpi_size; ++tmp_rank) {
+            int tmp_low_idx = tmp_rank * batch_size + (tmp_rank <= mpi_mod ? tmp_rank : mpi_mod);
+            int tmp_high_idx = tmp_low_idx + batch_size + (tmp_rank < mpi_mod ? 1 : 0);
+            recvcounts[tmp_rank] = (tmp_high_idx - tmp_low_idx);
+            displs[tmp_rank] = tmp_rank == 0 ? 0 : (displs[tmp_rank - 1] + recvcounts[tmp_rank - 1]);
+        }
+
+        MPI_Allgatherv(score_subtraction.data(), score_subtraction.size(), MPI_INT, all_data, recvcounts, displs,
+                       MPI_INT,
+                       MPI_COMM_WORLD);
+
+        int v = ca.first;
+        for (int i = 0; i < recvcunt; ++i) {
+            // 1st: if i is neighbor of v, then it must be subtracted
+            // 2nd: only subtraction of clients is performed
+            scores[i] += (v != i && G[v][i] <= r ? all_data[i] - 1 : all_data[i]);
+        }
+
+    } else {
+        for (int v: ca.second) {
+            assigned[v] = true; // vertices covered by center are checked as assigned
+            for (int j = 0; j < n; j++) {
+                if (v != j && G[v][j] <= r) {
+                    scores[j]--;
+                }
+            }
+        }
+        int v = ca.first;
+        for (int j = 0; j < n; j++) {
+            if (v != j && G[v][j] <= r)
+                scores[j]--;
+        }
     }
-    int v = ca.first;
-    for (int j = 0; j < n; j++) {
-        if (v != j && G[v][j] <= r)
-            scores[j]--;
-    }
+
+    clock_t end = clock();
+    double time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
+    timeDBS += time_spent;
 }
 
 void CkcSolver::updateDistances(int c) {
+
     for (int i = 0; i < n; i++) {
-        if (G[i][c] < distances[i])
-            distances[i] = G[i][c];
+        distances[i] = min(G[c][i], distances[i]);
     }
 }
 
@@ -106,10 +219,10 @@ void CkcSolver::loadRefMatrix() {
             vertexReferences[ir] = {j, G[i][j]};
         }
         sort(vertexReferences.begin(), vertexReferences.end(),
-             [](auto &v1, auto &v2) { return v1[1] > v2[1]; });
+             [](const vector<int> &v1, const vector<int> &v2) { return v1[1] > v2[1]; });
         vector<int> references(n);
         for (int j = 0; j < n; j++) {
-            references[j] = (int) vertexReferences[j][0];
+            references[j] = vertexReferences[j][0];
         }
         refMatrix[i] = references;
     }
@@ -129,7 +242,7 @@ int CkcSolver::getFVertex(int idxK, int iter) {
             }
         }
     } else {
-        f = (numRepetitions == n) ? iter : rand() % n;
+        f = (rep == n) ? iter : rand() % n;
     }
     return f;
 }
@@ -159,6 +272,12 @@ void CkcSolver::assignMissingVertices(vector<int> &C, vector<vector<int>> &A) {
 
 pair<int, vector<int>> CkcSolver::distanceBasedSelection(vector<int> &NgL, int r) {
 
+    callsDBSCount += 1;
+    sumClosedN += NgL.size();
+
+    // start time
+    clock_t begin = clock();
+
     pair<int, vector<int>> ca;
 //    if (NgL.size() >= mpi_size * 2) {
     if (true) {
@@ -170,29 +289,30 @@ pair<int, vector<int>> CkcSolver::distanceBasedSelection(vector<int> &NgL, int r
         int d = numeric_limits<int>::max();
         for (int i = mpi_low_idx; i < mpi_high_idx; ++i) {
             int v = NgL[i];
-            // get f_ref vertex
-            int fref = 0;
+            // get v_ref vertex
+            int vref = -1;
             int maxDist = -1;
             for (int j = 0; j < n; j++) {
-
-                int dist = min(distances[j], G[j][v]);
-                if (maxDist < dist) {
+                int dist = min(distances[j], G[v][j]);
+                if (maxDist < dist && !assigned[j]) {
                     maxDist = dist;
-                    fref = j;
+                    vref = j;
                 }
             }
 
             // get unassigned neighbors of v
-            vector<int> vertices(L);
+            vector<int> vertices;
+            vertices.reserve(L + 2);
+            vertices.resize(L);
             int dv = 0;
             int iu = 0;
-            for (int u : refMatrix[fref]) {
+            for (int u: refMatrix[vref]) {
                 // 1st: avoid v to be assigned to itself
                 // 2nd: Pruned graph
                 // 3rd: u is not assigned
                 if (u != v && G[v][u] <= r && !assigned[u]) {
                     if (iu == L) {
-                        dv = G[fref][u];
+                        dv = G[vref][u];
                         break;
                     }
                     vertices[iu] = u;
@@ -230,6 +350,7 @@ pair<int, vector<int>> CkcSolver::distanceBasedSelection(vector<int> &NgL, int r
                        MPI_COMM_WORLD);
 
         vector<int> vertices;
+        vertices.reserve(L);
         int prevD = numeric_limits<int>::max();
         int v;
         int posV = -1;
@@ -248,7 +369,7 @@ pair<int, vector<int>> CkcSolver::distanceBasedSelection(vector<int> &NgL, int r
 
     } else {
         int d = numeric_limits<int>::max();
-        for (int v : NgL) {
+        for (int v: NgL) {
 
             // get f_ref vertex
             int fref = 0;
@@ -266,7 +387,7 @@ pair<int, vector<int>> CkcSolver::distanceBasedSelection(vector<int> &NgL, int r
             vector<int> vertices(L);
             int dv = 0;
             int iu = 0;
-            for (int u : refMatrix[fref]) {
+            for (int u: refMatrix[fref]) {
                 // 1st: avoid v to be assigned to itself
                 // 2nd: Pruned graph
                 // 3rd: u is not assigned
@@ -287,6 +408,9 @@ pair<int, vector<int>> CkcSolver::distanceBasedSelection(vector<int> &NgL, int r
             }
         }
     }
+    clock_t end = clock();
+    double time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
+    timeDBS += time_spent;
     return ca;
 }
 
@@ -317,37 +441,33 @@ pair<vector<int>, vector<vector<int>>> CkcSolver::getFeasibleSolution(int r, int
         int f = getFVertex(idxK, iter);
 
         // get N(f)U{f} with score > L ... candidates to become centers
+        // if not vertex with score > L is found, the algorithm continues
+        // by processing vertex with biggest score
         vector<int> NgL;
-        NgL.reserve(n);
+        NgL.reserve(unassignedCount);
+        int maxScore = -1;
+        int vMaxScore = -1;
         for (int v = 0; v < n; ++v) {
             // 1st: v is not assigned
             // 2nd: Pruned graph
-            // 3rd: Score > L
-            // 4th: v is not a center
-            if (!assigned[v] && G[f][v] <= r && scores[v] > L && !centers[v]) {
-                NgL.push_back(v);
+            if (!assigned[v] && G[f][v] <= r) {
+                // looking for vertices with Score > L
+                if (scores[v] > L) {
+                    NgL.push_back(v);
+                }
+                // looking for vertex with max Score
+                if (maxScore < scores[v]) {
+                    maxScore = scores[v];
+                    vMaxScore = v;
+                }
             }
         }
 
         if (!NgL.empty()) {
             ca = distanceBasedSelection(NgL, r);
         } else {
-            int maxScore = -1;
-            int vMaxScore = -1;
             // first center is taken randomly
-            if (idxK > 0) {
-                for (int j = 0; j < n; j++) {
-                    // 1st: j is not assigned
-                    // 2nd: j is not a center
-                    // 3rd: Pruned graph
-                    if (!assigned[j] && !centers[j] && G[f][j] <= r) {
-                        if (maxScore < scores[j]) {
-                            maxScore = scores[j];
-                            vMaxScore = j;
-                        }
-                    }
-                }
-            } else {
+            if (idxK == 0) {
                 vMaxScore = f;
                 maxScore = scores[f];
             }
@@ -366,13 +486,9 @@ pair<vector<int>, vector<vector<int>>> CkcSolver::getFeasibleSolution(int r, int
             ca.second = vertices;
         }
 
-        centers[ca.first] = true; // center is checked as center
-        assigned[ca.first] = true; //center is checked as assigned to avoid to be considered in future
-
-        // vertices covered by center are checked as assigned
-        for (int v: ca.second) {
-            assigned[v] = true;
-        }
+        //center is checked as assigned to avoid to be considered in future
+        // vertices covered by center are checked as assigned in the updateScore function
+        assigned[ca.first] = true;
 
         capacities[ca.first] -= ca.second.size(); // capacity of center idxK-th is reduced
         unassignedCount -= ca.second.size() + 1; // +1 center is not considered
@@ -404,7 +520,7 @@ tuple<pair<vector<int>, vector<vector<int>>>, int> CkcSolver::solve() {
         int mid = (high + low) / 2;
         int r = w[mid];
         pair<vector<int>, vector<vector<int>>> CA_tmp;
-        for (int iter = 0; iter < numRepetitions; iter++) {
+        for (int iter = 0; iter < rep; iter++) {
 //            std::cout<<seed<<std::endl;
             srand(seed++);
 
@@ -537,3 +653,16 @@ int CkcSolver::alternate_heuristic(pair<vector<int>, vector<vector<int>>> &CA) {
     }
     return max_r;
 }
+
+long CkcSolver::averageCardClosedN() {
+    return sumClosedN / callsDBSCount;
+}
+
+double CkcSolver::getTimeDBS() const {
+    return timeDBS;
+}
+
+void CkcSolver::resetParallelMeasure() {
+    timeDBS = 0;
+}
+

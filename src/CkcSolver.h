@@ -12,7 +12,7 @@
 
 class CkcSolver {
 public:
-    CkcSolver(int k, int L, const std::vector<std::vector<int>> &G, int numRepetitions);
+    CkcSolver(int k, int L, const std::vector<std::vector<int>> &G, int rep);
 
 private:
     int k;
@@ -22,13 +22,15 @@ private:
     std::vector<int> w;
     std::vector<int> scores;
     std::vector<bool> assigned;
-    std::vector<bool> centers;
-    int numRepetitions;
+    int rep;
     std::vector<int> capacities;
     int unassignedCount; // tracks the amount of unassigned vertices
     int seed = 0;
     std::vector<int> distances;
     std::vector<std::vector<int>> refMatrix;
+    long sumClosedN;    // sum of cardinalities of N[v_f] in DistanceBasedSelection
+    long callsDBSCount; // total calls of DistanceBasedSelection
+    double timeDBS; // time taken by all DistanceBasedSelection executions
 
 
 public:
@@ -64,6 +66,17 @@ public:
     int farthest_distance(int c, int v, std::vector<int> &X);
 
     int alternate_heuristic(std::pair<std::vector<int>, std::vector<std::vector<int>>> &CA);
+
+    /**
+     *
+     * @return average of cardinality of total neighbors to be explored in
+     * DistanceBasedSelection algorithm
+     */
+    long averageCardClosedN();
+
+    void resetParallelMeasure();
+
+    double getTimeDBS() const;
 };
 
 
