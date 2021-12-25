@@ -1,55 +1,32 @@
 # ckc-heuristic
 A constructive heuristic for the Capacitated Vertex K-Center Problem
 
-The first time it is need to install the conan package manager with the respective libraries included in the conanfile.txt
 
-# Install conan and libraries
-
+## Install c++ boost libraries
 ```
-pip3 install conan
+sudo apt install libboost-all-dev
 ```
 
-## Reload local path
-```
-source ~/.profile
-```
-
-## Compiler configuration for GCC compiler >= 5.1 :
-```
-conan profile new default --detect
-conan profile update settings.compiler.libcxx=libstdc++11 default
-```
-
-## Install conan libraries
-```
-mkdir build && cd build
-conan install ..
-```
-
-NOTE: Previous steps only are needed to be executed once. Once conan libraries are installed, to compile and run the program, get back to the root project folder with ```cd ..```
-
-# Install cmake
+## Install cmake
 ```
 sudo apt install cmake
 ```
 
-# Install MPICH for parallel computing
+## Install MPICH for parallel computing
 ```
 sudo apt install libmpich-dev
 ```
 
-# Compile program
-
+## Compile program
 ```
 cmake -DCMAKE_BUILD_TYPE=Release .
 cmake --build .
 ```
-The binary file will be generated onto the "bin/" folder. Get onto it with ```cd bin/```
+The binary file will be generated onto the root folder with the name ```heuristic_ckc```
 
-# Run
-
+## Run
 ```
-./bin/heuristic_ckc [file] [n] [k] [L] [ind_rep] [rep] [print] [instance_format]
+./heuristic_ckc [file] [n] [k] [L] [ind_rep] [rep] [print] [instance_format]
 ```
 
 ## Where,
@@ -65,9 +42,9 @@ The binary file will be generated onto the "bin/" folder. Get onto it with ```cd
 | `[print]`    | (string) If true, prints the solutions (centers and assigned centers). Otherwise, only prints the solution size |
 | `[instance_format]`    | (string) Type of instance to use ('tsplib' or 'orlib' are supported). |
 
-# Example 1
+## Example 1
 ```
-./bin/heuristic_ckc dataset/URDI-3000/URDI-3000-01.tsp 3000 20 149 10 1 false tsp lib
+./heuristic_ckc dataset/URDI-3000/URDI-3000-01.tsp 3000 20 149 10 1 false tsp lib
 ```
 
 ### Output information
@@ -77,9 +54,9 @@ The execution report a output with the following relevant information:
 ```
 1818,2297.9,203.745,7.03125
 ```
-# Example 2 (execution with 3 cores)
+## Example 2 (execution with 3 cores)
 ```
-mpirun -np 3 ./bin/heuristic_ckc dataset/URDI-3000/URDI-3000-01.tsp 3000 20 149 10 1 false tsplib
+mpirun -np 3 ./heuristic_ckc dataset/URDI-3000/URDI-3000-01.tsp 3000 20 149 10 1 false tsplib
 ```
 
 ### Output information
@@ -87,9 +64,9 @@ mpirun -np 3 ./bin/heuristic_ckc dataset/URDI-3000/URDI-3000-01.tsp 3000 20 149 
 1818,2297.9,203.745,3.65
  ```
   
-# Example 3 (printing best found solution)
+## Example 3 (printing best found solution)
 ```
-mpirun -np 3 ./bin/heuristic_ckc dataset/URDI-150/URDI-150-01.tsp 150 5 29 10 1 true tsplib
+mpirun -np 3 ./heuristic_ckc dataset/URDI-150/URDI-150-01.tsp 150 5 29 10 1 true tsplib
 ```
 
 ### Output information
