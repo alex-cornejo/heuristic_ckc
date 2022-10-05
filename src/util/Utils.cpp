@@ -126,7 +126,7 @@ vector<vector<int>> Utils::loadGMetricSpace(int n, const string &filePath) {
     return C;
 }
 
-vector<vector<int>> Utils::loadORLIB(const string &filePath) {
+tuple<vector<vector<int>>, int, int> Utils::loadORLIB(const string &filePath) {
 
 
     std::fstream file(filePath, std::ios_base::in);
@@ -153,7 +153,7 @@ vector<vector<int>> Utils::loadORLIB(const string &filePath) {
     }
     file.close();
     floydWarshall(C);
-    return C;
+    return make_tuple(C, n, k);
 }
 
 void Utils::floydWarshall(vector<vector<int>> &C) {

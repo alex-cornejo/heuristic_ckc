@@ -22,7 +22,7 @@ public:
 
     static bool save(std::string &output_path, std::string &content);
 
-    static std::vector<std::vector<int>> loadORLIB(const std::string &filePath);
+    static std::tuple<std::vector<std::vector<int>>, int, int> loadORLIB(const std::string &filePath);
 };
 
 
