@@ -28,9 +28,9 @@ vector<vector<int>> Utils::loadGEucSpace(const string &file_path) {
             vector<float> subtracted;
             subtracted.reserve(v1.size());
             transform(v1.begin(), v1.end(), v2.begin(), back_inserter(subtracted),
-                           [](float a, float b) { return pow(a - b, 2); });
+                      [](float a, float b) { return pow(a - b, 2); });
             double d = sqrt(accumulate(subtracted.begin(), subtracted.end(), 0.0));
-            D[j][i] = D[i][j] = (int)(d+0.5);
+            D[j][i] = D[i][j] = (int) (d + 0.5);
         }
     }
     return D;
@@ -87,16 +87,16 @@ std::vector<std::vector<float>> Utils::readVList(const std::string &file_path) {
     return vertices;
 }
 
-std::vector<std::vector<float>> Utils::loadGMetricSpace(int n, const std::string &file_path) {
-    std::vector<std::vector<float>> G(n, std::vector<float>(n));
+vector<vector<int>> Utils::loadGMetricSpace(int n, const string &filePath) {
+    vector<vector<int>> C(n, vector<int>(n));
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
-            G[i][j] = i != j ? +INFINITY : 0;
+            C[i][j] = i != j ? numeric_limits<int>::max() : 0;
         }
     }
 
-    std::string line;
-    std::ifstream file(file_path);
+    string line;
+    ifstream file(filePath);
 
     if (file.is_open()) {
 
@@ -113,28 +113,58 @@ std::vector<std::vector<float>> Utils::loadGMetricSpace(int n, const std::string
 
             int v1 = stoi(line_vec[0]) - 1;
             int v2 = stoi(line_vec[1]) - 1;
-            float w = stof(line_vec[2]);
+            int w = stoi(line_vec[2]);
 
-            G[v1][v2] = w;
-            G[v2][v1] = w;
+            C[v1][v2] = w;
+            C[v2][v1] = w;
         }
         file.close();
     } else {
         std::cerr << "Unable to open file" << std::endl;
     }
-    floydWarshall(G);
-    return G;
+    floydWarshall(C);
+    return C;
 }
 
-void Utils::floydWarshall(std::vector<std::vector<float>> &G) {
-    int n = G.size();
+vector<vector<int>> Utils::loadORLIB(const string &filePath) {
+
+
+    std::fstream file(filePath, std::ios_base::in);
+    if (!file.is_open()) {
+        throw invalid_argument("Unable to open instance file");
+    }
+
+    int n, m, k;
+    file >> n >> m >> k;
+
+    vector<vector<int>> C(n, vector<int>(n));
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            C[i][j] = i != j ? numeric_limits<int>::max() : 0;
+        }
+    }
+
+    for (int i = 0; i < m; ++i) {
+        int v, u, w;
+        file >> v >> u >> w;
+        v--;
+        u--;
+        C[u][v] = C[v][u] = w;
+    }
+    file.close();
+    floydWarshall(C);
+    return C;
+}
+
+void Utils::floydWarshall(vector<vector<int>> &C) {
+    int n = C.size();
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
             for (int l = 0; l < n; ++l) {
-                float cost = (G[i][j] == +INFINITY || G[i][l] == +INFINITY) ?
-                             +INFINITY : G[i][j] + G[i][l];
-                if (cost < G[j][l]) {
-                    G[j][l] = cost;
+                int cost = (C[i][j] == numeric_limits<int>::max() || C[i][l] == numeric_limits<int>::max()) ?
+                           numeric_limits<int>::max() : C[i][j] + C[i][l];
+                if (cost < C[j][l]) {
+                    C[j][l] = cost;
                 }
             }
         }
@@ -143,7 +173,7 @@ void Utils::floydWarshall(std::vector<std::vector<float>> &G) {
 
 float Utils::stdDev(std::vector<int> &items, float average) {
     float std = 0;
-    for (float item : items) {
+    for (float item: items) {
         std += pow(item - average, 2);
     }
     int n = items.size() > 2 ? items.size() - 1 : items.size();
