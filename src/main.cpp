@@ -49,11 +49,11 @@ void validateSolution(KCSolution &kcSolution, int n, int L) {
 void execute(string &instancePath, int n, int k, int L,
              int indRep, int rep, bool printable, string &instanceFormat) {
 
-    vector<vector<int>> G;
+    vector<vector<int>> C;
     if (instanceFormat == "tsplib") {
-        G = Utils::loadGEucSpace(instancePath);
+        C = Utils::loadGEucSpace(instancePath);
     } else if (instanceFormat == "orlib") {
-//        G = Utils::loadGMetricSpace(n, instancePath);
+        tie(C, n, k) = Utils::loadORLIB(instancePath);
     } else {
         cerr << "instance format " << instanceFormat << " is not supported!!!" << endl;
         return;
@@ -64,7 +64,7 @@ void execute(string &instancePath, int n, int k, int L,
     double totalTimeParallelSec = 0;
 
     vector<int> solutionSizeArr(indRep);
-    CkcSolver solver(k, L, G, rep);
+    CkcSolver solver(k, L, C, rep);
     solver.mpi_rank = mpi_rank;
     solver.mpi_size = mpi_size;
 
@@ -98,7 +98,8 @@ void execute(string &instancePath, int n, int k, int L,
     if (mpi_rank == 0) {
         float average = solutionSizeSum / (float) indRep;
         cout << bestFitness << "," << average << "," << Utils::stdDev(solutionSizeArr, average) << ","
-             << (totalTime / indRep) << "," << (totalTimeParallelSec/indRep) << "," << solver.averageCardClosedN() << endl;
+             << (totalTime / indRep) << "," << (totalTimeParallelSec / indRep) << "," << solver.averageCardClosedN()
+             << endl;
 
         KCSolution kcSolution = toKCModel(bestAssignment);
         kcSolution.setInstance(instancePath);
@@ -117,15 +118,15 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
     string instancePath = argv[1];
-    int n = atoi(argv[2]);
-    int k = atoi(argv[3]);
-    int L = atoi(argv[4]);
-    int maxIter = atoi(argv[5]);
-    int numRepetitions = atoi(argv[6]);
-    bool printable = strcmp(argv[7], "true") == 0;
-    string instanceFormat = argv[8];
+    int n = atoi(argv[2]);                          // number of nodes
+    int k = atoi(argv[3]);                          // number of centers
+    int L = atoi(argv[4]);                          // capacity
+    int indRep = atoi(argv[5]);                     // independent repetitions
+    int rep = atoi(argv[6]);                        // repetitions
+    bool printable = strcmp(argv[7], "true") == 0;  // print solution
+    string instanceFormat = argv[8];                // instance format "tsplib" or "orlib"
 
-    execute(instancePath, n, k, L, maxIter, numRepetitions, printable, instanceFormat);
+    execute(instancePath, n, k, L, indRep, rep, printable, instanceFormat);
 
     MPI_Finalize();
 

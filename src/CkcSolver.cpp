@@ -7,6 +7,7 @@
 #include <iostream>
 #include <mpi.h>
 #include <queue>
+#include <limits>
 
 using namespace std;
 

@@ -16,11 +16,13 @@ public:
 
     static float stdDev(std::vector<int> &items, float average);
 
-    static void floydWarshall(std::vector<std::vector<float>>& G);
+    static void floydWarshall(std::vector<std::vector<int>> &C);
 
-    static std::vector<std::vector<float>> loadGMetricSpace(int n, const std::string &file_path);
+    static std::vector<std::vector<int>> loadGMetricSpace(int n, const std::string &filePath);
 
     static bool save(std::string &output_path, std::string &content);
+
+    static std::tuple<std::vector<std::vector<int>>, int, int> loadORLIB(const std::string &filePath);
 };
 
 
