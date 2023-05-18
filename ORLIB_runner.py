@@ -5,7 +5,7 @@ import re
 import subprocess
 from pathlib import Path
 
-output_path = "output.csv"
+output_path = "output_orlib.csv"
 if os.path.exists(output_path):
     os.remove(output_path)
 imbalance_values = [0.0, 0.05, 0.1]
@@ -49,11 +49,12 @@ for file_path in files:
         if prevL != L:
 
             # try with all cores options
-            line_res = "{},{},{}".format(instance_name, n, k, L)
+            line_res = "{},{},{},{}".format(instance_name, n, k, L)
             for np in cores_exp:
                 res = run_onehop(file_path, L, np, 30, 1)
                 line_res += ",{}".format(res)
-            print(line_res)
+            # print(line_res)
             with open(output_path, "a") as output_file:
                 output_file.write(line_res)
                 output_file.write("\n")
+            prevL = L
