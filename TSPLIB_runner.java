@@ -3,19 +3,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class RunExperimentsPHTSPLIB {
+public class TSPLIB_runner {
 
-    static final int[] CORES_EXP = { 1, 2, 4, 8, 16, 32 };
-    static final String ONEHOP_SOLVER = "./heuristic_ckc";
-    static final String INSTANCES_PATH = "dataset";
+    static final int[] CORES_EXP = { 1, 2, 4, 8, 16, 32 };  // number of cores to be used in the experiments
+    static final String ONEHOP_SOLVER = "./heuristic_ckc";  // compiled program of heuristic
+    static final String INSTANCES_PATH = "dataset/TSPLIB";
 
-    static List<Object[]> set1 = Arrays.asList(new Object[] { "kroA100", 100 }, new Object[] { "kroB100", 100 },
-            new Object[] { "kroC100", 100 }, new Object[] { "eil101", 101 }, new Object[] { "lin105", 105 },
-            new Object[] { "pr107", 107 });
-    static List<Object[]> set2 = Arrays.asList(new Object[] { "kroA200", 200 }, new Object[] { "kroB200", 200 },
-            new Object[] { "ts225", 225 }, new Object[] { "pr226", 226 }, new Object[] { "a280", 280 });
-    static List<Object[]> set3 = Arrays.asList(new Object[] { "rat195", 195 }, new Object[] { "d198", 198 },
+    static List<Object[]> datasetC1 = Arrays.asList(new Object[] { "rat195", 195 }, new Object[] { "d198", 198 },
             new Object[] { "gr202", 202 }, new Object[] { "tsp225", 225 }, new Object[] { "gr229", 229 });
+    static List<Object[]> datasetC2 = Arrays.asList(new Object[] { "kroA200", 200 }, new Object[] { "kroB200", 200 },
+            new Object[] { "ts225", 225 }, new Object[] { "pr226", 226 }, new Object[] { "a280", 280 });
 
     static List<String> executeCmd(String cmd) throws IOException, InterruptedException {
         Runtime run = Runtime.getRuntime();
@@ -33,9 +30,9 @@ public class RunExperimentsPHTSPLIB {
 
     static double[] executeOneHopExperiment(String instancePath, int n, int k, int L, int np)
             throws IOException, InterruptedException {
-        int indRep = 30;
-        int rep = 1;
-        boolean printable = false;
+        int indRep = 30;    // change to 1 for OHCKC+
+        int rep = 1;    // change to n for OHCKC+
+        boolean printable = false;  // for masive instances, solutions are not saved
         final String solverPath = "mpirun -np " + np + " " + ONEHOP_SOLVER;
         String cmd = String.format("%s %s %d %d %d %d %d %b tsplib", solverPath, instancePath, n, k, L, indRep, rep,
                 printable);
@@ -73,8 +70,8 @@ public class RunExperimentsPHTSPLIB {
         double[] margins = { 0, 0.05, 0.1 };
         int numberOfInstances = 1;
 
-        BufferedWriter outputWriter = new BufferedWriter(new FileWriter("output.csv"));
-        for (Object[] pair : set2) {
+        BufferedWriter outputWriter = new BufferedWriter(new FileWriter("TSPLIB_output.csv"));
+        for (Object[] pair : datasetC1) {   // change to datasetC2 for dataset C2
             int n = (int) pair[1];
             for (int k : K) {
                 int prevL = -1;

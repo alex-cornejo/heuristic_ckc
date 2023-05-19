@@ -5,12 +5,12 @@ import re
 import subprocess
 from pathlib import Path
 
-output_path = "output_orlib.csv"
+output_path = "output_orlib.csv"    # output file to save results of the experiments
 if os.path.exists(output_path):
     os.remove(output_path)
 imbalance_values = [0.0, 0.05, 0.1]
 dataset_path = "dataset/ORLIB/"
-cores_exp = [1, 2, 4, 8, 16, 32]
+cores_exp = [1, 2, 4, 8, 16, 32]        # number of cores to test
 # cores_exp = [1, 2]
 
 files = glob.glob("{}/pmed*.txt".format(dataset_path))
