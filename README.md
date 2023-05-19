@@ -1,5 +1,9 @@
 # OHCKC: A constructive heuristic for the uniform capacitated vertex $k$-center problem
 
+**If this implementation is useful for you, please cite our paper.
+This implementation should be used just for research/academic purposes.**
+
+The following instructions were tested for Ubuntu 20.04.5 LTS.
 
 ## Install c++ boost libraries
 ```

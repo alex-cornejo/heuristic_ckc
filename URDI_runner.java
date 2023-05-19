@@ -2,10 +2,10 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RunExperimentsPHCores {
+public class URDI_runner {
 
-    static final String tspFolderName = "tsplib";
-    static final int[] CORES_EXP = { 1, 2, 4, 8, 16, 32 };
+    static final String tspFolderName = "URDI";
+    static final int[] CORES_EXP = { 1, 2, 4, 8, 16, 32 };  // number of cores to be used in the experiments
     static final String ONEHOP_SOLVER = "./heuristic_ckc";
     static final String INSTANCES_PATH = "dataset";
 
@@ -62,14 +62,14 @@ public class RunExperimentsPHCores {
     public static void main(String[] args) throws IOException, InterruptedException {
         int[] K = { 5, 10, 20, 40 };
         double[] margins = { 0, 0.05, 0.1 };
-        int numberOfInstances = 1;
+        int numberOfInstances = 1;  // number of instances per size (e.g., URDI-100-01.tsp, URDI-100-02.tsp, etc.)
         int initSize = 1000;
         int finalSize = 5000;
-        int offset = 1000;
+        int offset = 1000;  // offset for instances, e.g., URDI-1000-01.tsp, URDI-2000-01.tsp, etc.
         final int sizeIdxInstance = 2;
         final String prefix = "URDI";
 
-        BufferedWriter outputWriter = new BufferedWriter(new FileWriter("output.csv"));
+        BufferedWriter outputWriter = new BufferedWriter(new FileWriter("URDI_output.csv"));
         for (int n = initSize; n <= finalSize; n += offset) {
 
             for (int k : K) {
