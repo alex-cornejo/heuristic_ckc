@@ -1,5 +1,25 @@
 # OHCKC: A constructive heuristic for the uniform capacitated vertex $k$-center problem
 
+## Citing
+### BibTex
+```
+@article{ohckc2023,
+author = {Cornejo Acosta, Jos\'{e} Alejandro and Garc\'{\i}a D\'{\i}az, Jes\'{u}s and P\'{e}rez Sansalvador, Julio C\'{e}sar and R\'{\i}os-Mercado, Roger Z. and Pomares Hern\'{a}ndez, Sa\'{u}l Eduardo},
+title = {A constructive heuristic for the uniform capacitated vertex $k$-center problem},
+year = {2023},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+issn = {1084-6654},
+url = {https://doi.org/10.1145/3604911},
+doi = {10.1145/3604911},
+note = {Just Accepted},
+journal = {ACM J. Exp. Algorithmics},
+month = {jun},
+keywords = {heuristic search, parallel algorithm, combinatorial optimization, capacitated k-center}
+}
+```
+
+
 **If this implementation is useful for you, please cite our paper.
 This implementation should be used just for research/academic purposes.**
 
