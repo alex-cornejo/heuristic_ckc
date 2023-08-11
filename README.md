@@ -4,18 +4,22 @@
 ### BibTex
 ```
 @article{ohckc2023,
-author = {Cornejo Acosta, Jos\'{e} Alejandro and Garc\'{\i}a D\'{\i}az, Jes\'{u}s and P\'{e}rez Sansalvador, Julio C\'{e}sar and R\'{\i}os-Mercado, Roger Z. and Pomares Hern\'{a}ndez, Sa\'{u}l Eduardo},
-title = {A constructive heuristic for the uniform capacitated vertex $k$-center problem},
+author = {Cornejo-Acosta, Jos\'{e} Alejandro and Garc\'{\i}a-D\'{\i}az, Jes\'{u}s and P\'{e}rez-Sansalvador, Julio C\'{e}sar and R\'{\i}os-Mercado, Roger Z. and Pomares-Hern\'{a}ndez, Sa\'{u}l Eduardo},
+title = {A Constructive Heuristic for the Uniform Capacitated Vertex K-Center Problem},
 year = {2023},
+issue_date = {December 2023},
 publisher = {Association for Computing Machinery},
 address = {New York, NY, USA},
+volume = {28},
 issn = {1084-6654},
 url = {https://doi.org/10.1145/3604911},
 doi = {10.1145/3604911},
-note = {Just Accepted},
+abstract = {The uniform capacitated vertex k-center problem is an 𝒩𝒫-hard combinatorial optimization problem that models real situations where k centers can only attend a maximum number of customers, and the travel time or distance from the customers to their assigned center has to be minimized. This article introduces a polynomial-time constructive heuristic algorithm that exploits the relationship between this problem and the minimum capacitated dominating set problem. The proposed heuristic is based on the one-hop farthest-first heuristic that has proven effective for the uncapacitated version of the problem. We carried out different empirical evaluations of the proposed heuristic, including an analysis of the effect of a parallel implementation of the algorithm, which significantly improved the running time for relatively large instances.},
 journal = {ACM J. Exp. Algorithmics},
-month = {jun},
-keywords = {heuristic search, parallel algorithm, combinatorial optimization, capacitated k-center}
+month = {aug},
+articleno = {1.6},
+numpages = {26},
+keywords = {capacitated k-center, parallel algorithm, Combinatorial optimization, heuristic search}
 }
 ```
 
