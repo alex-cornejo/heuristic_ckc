@@ -5,7 +5,7 @@
 ```
 @article{ohckc2023,
 author = {Cornejo-Acosta, Jos\'{e} Alejandro and Garc\'{\i}a-D\'{\i}az, Jes\'{u}s and P\'{e}rez-Sansalvador, Julio C\'{e}sar and R\'{\i}os-Mercado, Roger Z. and Pomares-Hern\'{a}ndez, Sa\'{u}l Eduardo},
-title = {A Constructive Heuristic for the Uniform Capacitated Vertex K-Center Problem},
+title = {A Constructive Heuristic for the Uniform Capacitated Vertex $k$-center Problem},
 year = {2023},
 issue_date = {December 2023},
 publisher = {Association for Computing Machinery},
