@@ -104,14 +104,14 @@ mpirun -np 3 ./heuristic_ckc dataset/URDI/URDI-150/URDI-150-01.tsp 150 5 29 10 1
 
 ## Example 4 (ORLIB instance)
 ```
-mpirun -np 4 ./heuristic_ckc dataset/ORLIB/pmed21.txt -1 -1 99 500 1 false orlib
+mpirun -np 4 ./heuristic_ckc dataset/ORLIB/pmed21.txt -1 -1 99 30 1 false orlib
 ```
 For ORLIB instances, $n$ and $k$ are taken form the instance file.
 
 ### output 4
 ```
-47,47,0,4.74718,4.54102,172
+47,49.1333,1.52527,0.0121319,0.0116038,211
 ```
 
 # Contact
-- alejandro.ca@inaoe.mx 
+- alexcornejo@inaoep.mx 
