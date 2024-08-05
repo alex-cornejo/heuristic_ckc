@@ -77,6 +77,10 @@ public:
     void resetParallelMeasure();
 
     double getTimeDBS() const;
+
+    void setSeed(int seed);
+
+    int getSeed();
 };
 
 

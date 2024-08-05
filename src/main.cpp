@@ -47,7 +47,7 @@ void validateSolution(KCSolution &kcSolution, int n, int L) {
 }
 
 void execute(string &instancePath, int n, int k, int L,
-             int indRep, int rep, bool printable, string &instanceFormat) {
+             int indRep, int rep, bool printable, string &instanceFormat, int seed) {
 
     vector<vector<int>> C;
     if (instanceFormat == "tsplib") {
@@ -65,6 +65,7 @@ void execute(string &instancePath, int n, int k, int L,
 
     vector<int> solutionSizeArr(indRep);
     CkcSolver solver(k, L, C, rep);
+    solver.setSeed(seed);
     solver.mpi_rank = mpi_rank;
     solver.mpi_size = mpi_size;
 
@@ -125,8 +126,12 @@ int main(int argc, char **argv) {
     int rep = atoi(argv[6]);                        // repetitions
     bool printable = strcmp(argv[7], "true") == 0;  // print solution
     string instanceFormat = argv[8];                // instance format "tsplib" or "orlib"
+    int seed = 0;                                   // seed for random number generator
+    if (argc==10) {
+        seed = atoi(argv[9]);
+    }
 
-    execute(instancePath, n, k, L, indRep, rep, printable, instanceFormat);
+    execute(instancePath, n, k, L, indRep, rep, printable, instanceFormat, seed);
 
     MPI_Finalize();
 

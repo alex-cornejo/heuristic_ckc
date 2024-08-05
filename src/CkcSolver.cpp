@@ -667,3 +667,10 @@ void CkcSolver::resetParallelMeasure() {
     timeDBS = 0;
 }
 
+void CkcSolver::setSeed(int seed) {
+    this->seed = seed;
+}
+
+int CkcSolver::getSeed() {
+    return seed;
+}
